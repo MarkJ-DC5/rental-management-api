@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: Rental Management System REST API
+  profiles:
+      active: dev
+  datasource:
+    url: jdbc:mysql://localhost:3307/rental_management
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database: mysql
+    show-sql: true
+
+server:
+  port: 8080
+
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: *
