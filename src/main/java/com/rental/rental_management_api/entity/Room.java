@@ -1,5 +1,7 @@
 package com.rental.rental_management_api.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.rental.rental_management_api.model.RoomType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,7 +10,12 @@ import java.util.List;
 
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder @ToString
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,19 +32,14 @@ public class Room {
     @Column(name = "rent", nullable = false)
     private Integer rent;
 
-    // Cascade Rule
+    //TODO: Cascade Rule
     @ManyToOne
     @JoinColumn(name = "building_id", referencedColumnName = "building_id", nullable = false)
+    @JsonBackReference
     private Building building;
 
     @OneToMany(mappedBy = "room")
     private List<Tenant> tenants = new ArrayList<>();
-
-    public enum RoomType {
-        Residential,
-        Commercial,
-        Others
-    }
 
     public Room(Integer roomId, String roomName, RoomType roomType, Integer rent, Building building) {
         this.roomId = roomId;

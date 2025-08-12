@@ -7,5 +7,5 @@ import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface BuildingRepository extends JpaRepository<Building, String> {
+public interface BuildingRepository extends JpaRepository<Building, Integer> {
 }

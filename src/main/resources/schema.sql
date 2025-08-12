@@ -3,7 +3,8 @@ CREATE DATABASE rental_management;
 USE rental_management;
 
 CREATE TABLE building (
-	building_id VARCHAR(100) PRIMARY KEY,
+	building_id INT AUTO_INCREMENT PRIMARY KEY,
+	building_name VARCHAR(100) NOT NULL,
 	street VARCHAR(255) NOT NULL,
 	barangay VARCHAR(100) NOT NULL,
 	city VARCHAR(100) NOT NULL,
@@ -12,7 +13,7 @@ CREATE TABLE building (
 
 CREATE TABLE room (
 	room_id INT AUTO_INCREMENT PRIMARY KEY,
-	building_id VARCHAR(100) NOT NULL,
+	building_id INT NOT NULL,
 	room_name VARCHAR(100) NOT NULL,
 	room_type ENUM('Residential', 'Commercial', 'Others') NOT NULL,
 	rent INT NOT NULL,
