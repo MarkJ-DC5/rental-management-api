@@ -1,7 +1,7 @@
 package com.rental.rental_management_api.mapper;
 
-import com.rental.rental_management_api.payload.RoomDTO;
 import com.rental.rental_management_api.entity.Room;
+import com.rental.rental_management_api.payload.RoomDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -16,5 +16,6 @@ public interface RoomMapper {
     Room toEntity(RoomDTO roomDTO);
 
     List<RoomDTO> toDtoList(List<Room> rooms);
+
     List<Room> toEntityList(List<RoomDTO> roomDTOS);
 }

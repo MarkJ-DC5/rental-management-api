@@ -1,8 +1,8 @@
 package com.rental.rental_management_api.mapper;
 
-import com.rental.rental_management_api.payload.TenantDTO;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
+import com.rental.rental_management_api.payload.TenantDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -22,6 +22,7 @@ public interface TenantMapper {
     Tenant toEntity(TenantDTO tenantDto);
 
     List<TenantDTO> toDtoList(List<Tenant> tenants);
+
     List<Tenant> toEntityList(List<TenantDTO> tenantDtos);
 
     default Integer calculateAge(LocalDate birthdate) {

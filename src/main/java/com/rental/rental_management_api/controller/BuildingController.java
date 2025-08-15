@@ -1,14 +1,14 @@
 package com.rental.rental_management_api.controller;
 
-import com.rental.rental_management_api.payload.BuildingDTO;
-import com.rental.rental_management_api.payload.RoomDTO;
-import com.rental.rental_management_api.payload.TenantDTO;
 import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
 import com.rental.rental_management_api.mapper.BuildingMapper;
 import com.rental.rental_management_api.mapper.RoomMapper;
 import com.rental.rental_management_api.mapper.TenantMapper;
+import com.rental.rental_management_api.payload.BuildingDTO;
+import com.rental.rental_management_api.payload.RoomDTO;
+import com.rental.rental_management_api.payload.TenantDTO;
 import com.rental.rental_management_api.service.BuildingService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -41,12 +41,12 @@ public class BuildingController {
     private final TenantMapper tenantMapper;
 
     @GetMapping()
-    public ResponseEntity<List<BuildingDTO>> getAllBuildings(){
+    public ResponseEntity<List<BuildingDTO>> getAllBuildings() {
         return ResponseEntity.ok(buildingMapper.toDtoList(service.getAllBuildings()));
     }
 
     @GetMapping(path = "/{buildingId}")
-    public ResponseEntity<BuildingDTO> getBuildingById(@PathVariable Integer buildingId){
+    public ResponseEntity<BuildingDTO> getBuildingById(@PathVariable Integer buildingId) {
         return ResponseEntity.ok(buildingMapper.toDto(service.getBuildingById(buildingId)));
     }
 
@@ -54,7 +54,7 @@ public class BuildingController {
     // http://localhost:8080/buildings/1/rooms?page0&size=10&sort=rent,asc&sort=roomName,asc
     public ResponseEntity<Page<RoomDTO>> getRoomsByBuildingId(
             @PathVariable Integer buildingId,
-            @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Pageable pageable){
+            @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Pageable pageable) {
 
         Page<Room> rooomsPage = service.getRoomsByBuildingId(buildingId, pageable);
         List<RoomDTO> roomsDtos = roomMapper.toDtoList(rooomsPage.getContent());
@@ -65,7 +65,7 @@ public class BuildingController {
     @GetMapping(path = "/{buildingId}/tenants")
     public ResponseEntity<Page<TenantDTO>> getTenantsByBuildingId(
             @PathVariable Integer buildingId,
-            @SortDefault(sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable){
+            @SortDefault(sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<Tenant> tenantsPage = service.getTenantsByBuildingID(buildingId, pageable);
         List<TenantDTO> tenantDtos = tenantMapper.toDtoList(tenantsPage.getContent());
 
@@ -78,20 +78,22 @@ public class BuildingController {
         Building savedBuilding = service.saveBuilding(building);
 
         URI location =
-                ServletUriComponentsBuilder.fromCurrentRequest().path("/{buildingId}").buildAndExpand(savedBuilding.getBuildingId()).toUri();
+                ServletUriComponentsBuilder.fromCurrentRequest().path("/{buildingId}")
+                        .buildAndExpand(savedBuilding.getBuildingId()).toUri();
 
         return ResponseEntity.created(location).body(buildingMapper.toDto(savedBuilding));
     }
 
     @PutMapping(path = "/{buildingId}")
-    public ResponseEntity<BuildingDTO> putBuilding(@PathVariable Integer buildingId, @Valid @RequestBody BuildingDTO buildingDTO){
+    public ResponseEntity<BuildingDTO> putBuilding(@PathVariable Integer buildingId,
+                                                   @Valid @RequestBody BuildingDTO buildingDTO) {
         Building building = buildingMapper.toEntity(buildingDTO);
         building = service.updateBuilding(buildingId, building);
         return ResponseEntity.ok(buildingMapper.toDto(building));
     }
 
     @DeleteMapping(path = "/{buildingId}")
-    public ResponseEntity<Void> deleteBuilding(@PathVariable Integer buildingId){
+    public ResponseEntity<Void> deleteBuilding(@PathVariable Integer buildingId) {
         service.deleteBuilding(buildingId);
         return ResponseEntity.noContent().build();
     }

@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -42,8 +41,8 @@ public class MyCLIRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         log.debug("SQL Initialization Mode: " + sqlInitMode);
-        if (sqlInitMode.equalsIgnoreCase("always")){
-             initializeData();
+        if (sqlInitMode.equalsIgnoreCase("always")) {
+            initializeData();
         }
 //
 //        log.info(buildingService.getAllBuildings().toString());
@@ -54,7 +53,7 @@ public class MyCLIRunner implements CommandLineRunner {
 //        ).toString());
     }
 
-    public void initializeData(){
+    public void initializeData() {
         log.debug("Initializing Data...");
         buildingRepository.saveAll(List.of(
                 new Building("Behind House", "Mario Santiago Rd", "Lambakin", "Marilao", "Bulacan"),
@@ -87,7 +86,10 @@ public class MyCLIRunner implements CommandLineRunner {
 
                 for (int j = 0; j < tenantsToCreate; j++) {
                     Tenant.Gender gender = new Random().nextInt(2) == 1 ? Tenant.Gender.F : Tenant.Gender.M;
-                    Tenant tenant = new Tenant(null, j == 0, faker.name().firstName(), faker.name().lastName(), faker.name().lastName(), faker.date().birthday(22, 50).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), gender, faker.phoneNumber().cellPhone(), LocalDate.now(), null, room);
+                    Tenant tenant = new Tenant(null, j == 0, faker.name().firstName(), faker.name().lastName(),
+                            faker.name().lastName(),
+                            faker.date().birthday(22, 50).toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                            gender, faker.phoneNumber().cellPhone(), LocalDate.now(), null, room);
                     tenantRepository.save(tenant);
                 }
             }

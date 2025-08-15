@@ -7,7 +7,6 @@ import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.repository.BuildingRepository;
 import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,35 +35,35 @@ public class BuildingService {
                 );
     }
 
-    public List<Building> getAllBuildings(){
+    public List<Building> getAllBuildings() {
         return buildingRepository.findAll(Sort.by("buildingName").ascending());
     }
 
-    public Building getBuildingById(Integer buildingId){
+    public Building getBuildingById(Integer buildingId) {
         return getBuildingOrThrow(buildingId);
     }
 
-    public Page<Room> getRoomsByBuildingId(Integer buildingId, Pageable pageable){
+    public Page<Room> getRoomsByBuildingId(Integer buildingId, Pageable pageable) {
         getBuildingOrThrow(buildingId);
         return roomRepository.findByBuilding_BuildingId(buildingId, pageable);
     }
 
-    public Page<Tenant> getTenantsByBuildingID(Integer buildingId, Pageable pageable){
+    public Page<Tenant> getTenantsByBuildingID(Integer buildingId, Pageable pageable) {
         getBuildingOrThrow(buildingId);
         return tenantRepository.findByRoom_Building_BuildingId(buildingId, pageable);
     }
 
-    public Building saveBuilding(Building building){
+    public Building saveBuilding(Building building) {
         return buildingRepository.save(building);
     }
 
-    public Building updateBuilding(Integer buildingId, Building building){
+    public Building updateBuilding(Integer buildingId, Building building) {
         getBuildingOrThrow(buildingId);
         building.setBuildingId(buildingId);
         return buildingRepository.save(building);
     }
 
-    public void deleteBuilding(Integer buildingId){
+    public void deleteBuilding(Integer buildingId) {
         Building building = getBuildingOrThrow(buildingId);
         buildingRepository.delete(building);
     }

@@ -4,10 +4,10 @@ import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.payload.ErrorDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
                 errors
         );
 
-        System.out.println(errorDetails.toString());
+        System.out.println(errorDetails);
 
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
                 request.getDescription(false)  // e.g., the URL path
         );
 
-        System.out.println(errorDetails.toString());
+        System.out.println(errorDetails);
 
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }

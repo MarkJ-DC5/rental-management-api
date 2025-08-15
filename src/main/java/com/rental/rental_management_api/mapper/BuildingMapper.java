@@ -1,7 +1,7 @@
 package com.rental.rental_management_api.mapper;
 
-import com.rental.rental_management_api.payload.BuildingDTO;
 import com.rental.rental_management_api.entity.Building;
+import com.rental.rental_management_api.payload.BuildingDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -12,9 +12,10 @@ import java.util.List;
 public interface BuildingMapper {
     BuildingMapper INSTANCE = Mappers.getMapper(BuildingMapper.class);
 
-    @Mapping(target="address", expression = "java(building.getStreet() + \", \" + building.getBarangay() + \", \" + " +
-            "building.getCity() + \", \" + " +
-            "building.getProvince())")
+    @Mapping(target = "address", expression =
+            "java(building.getStreet() + \", \" + building.getBarangay() + \", \" + " +
+                    "building.getCity() + \", \" + " +
+                    "building.getProvince())")
     BuildingDTO toDto(Building building);
 
     @Mapping(target = "street", expression = "java(buildingDTO.getAddress().split(\", \")[0])")
@@ -24,5 +25,6 @@ public interface BuildingMapper {
     Building toEntity(BuildingDTO buildingDTO);
 
     List<BuildingDTO> toDtoList(List<Building> buildings);
+
     List<Building> toEntityList(List<BuildingDTO> buildingDtos);
 }
