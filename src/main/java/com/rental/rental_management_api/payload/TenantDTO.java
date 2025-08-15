@@ -1,5 +1,6 @@
-package com.rental.rental_management_api.dto;
+package com.rental.rental_management_api.payload;
 
+import jakarta.persistence.Entity;
 import lombok.*;
 
 import java.time.LocalDate;

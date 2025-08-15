@@ -3,6 +3,7 @@ package com.rental.rental_management_api.service;
 import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
+import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.repository.BuildingRepository;
 import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
@@ -30,8 +31,9 @@ public class BuildingService {
 
     private Building getBuildingOrThrow(Integer buildingId) {
         return buildingRepository.findById(buildingId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Building ID " + buildingId + " not found"));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Building", buildingId)
+                );
     }
 
     public List<Building> getAllBuildings(){

@@ -1,6 +1,5 @@
-package com.rental.rental_management_api.dto;
+package com.rental.rental_management_api.payload;
 
-import com.rental.rental_management_api.model.RoomType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;

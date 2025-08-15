@@ -7,7 +7,12 @@ import java.time.LocalDate;
 
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder @ToString
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

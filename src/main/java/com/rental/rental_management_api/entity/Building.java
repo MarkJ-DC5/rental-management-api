@@ -7,9 +7,13 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-//1hr 30mins
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder @ToString
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 public class Building {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
