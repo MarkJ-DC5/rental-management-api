@@ -1,6 +1,6 @@
 package com.rental.rental_management_api.mapper;
 
-import com.rental.rental_management_api.dto.RoomDTO;
+import com.rental.rental_management_api.payload.RoomDTO;
 import com.rental.rental_management_api.entity.Room;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

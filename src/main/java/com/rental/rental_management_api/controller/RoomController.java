@@ -1,8 +1,8 @@
 package com.rental.rental_management_api.controller;
 
-import com.rental.rental_management_api.dto.BuildingDTO;
-import com.rental.rental_management_api.dto.RoomDTO;
-import com.rental.rental_management_api.dto.TenantDTO;
+import com.rental.rental_management_api.payload.BuildingDTO;
+import com.rental.rental_management_api.payload.RoomDTO;
+import com.rental.rental_management_api.payload.TenantDTO;
 import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
@@ -51,13 +51,13 @@ public class RoomController {
         return buildingMapper.toDto(building);
     }
 
-    @GetMapping(path = "/buildings/{buildingId}/rooms")
-    // buildings/1/rooms?sort=roomName,desc&sort=rent,asc
-    public List<RoomDTO> getRoomsByBuildingId(
-            @PathVariable Integer buildingId,
-            @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Sort sort){
-        return roomMapper.toDtoList(roomRepository.findByBuilding_BuildingId(buildingId, sort));
-    }
+//    @GetMapping(path = "/buildings/{buildingId}/rooms")
+//    // buildings/1/rooms?sort=roomName,desc&sort=rent,asc
+//    public List<RoomDTO> getRoomsByBuildingId(
+//            @PathVariable Integer buildingId,
+//            @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Sort sort){
+//        return roomMapper.toDtoList(roomRepository.findByBuilding_BuildingId(buildingId, sort));
+//    }
 
     @GetMapping(path = "rooms/{roomId}")
     public RoomDTO getRoomById(@PathVariable Integer roomId){

@@ -1,20 +1,27 @@
 package com.rental.rental_management_api.controller;
 
-import com.rental.rental_management_api.dto.BuildingDTO;
-import com.rental.rental_management_api.dto.RoomDTO;
-import com.rental.rental_management_api.dto.TenantDTO;
+import com.rental.rental_management_api.payload.BuildingDTO;
+import com.rental.rental_management_api.payload.RoomDTO;
+import com.rental.rental_management_api.payload.TenantDTO;
+import com.rental.rental_management_api.entity.Building;
+import com.rental.rental_management_api.entity.Room;
+import com.rental.rental_management_api.entity.Tenant;
 import com.rental.rental_management_api.mapper.BuildingMapper;
 import com.rental.rental_management_api.mapper.RoomMapper;
 import com.rental.rental_management_api.mapper.TenantMapper;
 import com.rental.rental_management_api.service.BuildingService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -34,27 +41,58 @@ public class BuildingController {
     private final TenantMapper tenantMapper;
 
     @GetMapping()
-    public List<BuildingDTO> getAllBuildings(){
-        return buildingMapper.toDtoList(service.getAllBuildings());
+    public ResponseEntity<List<BuildingDTO>> getAllBuildings(){
+        return ResponseEntity.ok(buildingMapper.toDtoList(service.getAllBuildings()));
     }
 
     @GetMapping(path = "/{buildingId}")
-    public BuildingDTO getBuildingById(@PathVariable Integer buildingId){
-        return buildingMapper.toDto(service.getBuildingById(buildingId));
+    public ResponseEntity<BuildingDTO> getBuildingById(@PathVariable Integer buildingId){
+        return ResponseEntity.ok(buildingMapper.toDto(service.getBuildingById(buildingId)));
     }
 
     @GetMapping(path = "/{buildingId}/rooms")
-    // buildings/1/rooms?sort=roomName,desc&sort=rent,asc
-    public List<RoomDTO> getRoomsByBuildingId(
+    // http://localhost:8080/buildings/1/rooms?page0&size=10&sort=rent,asc&sort=roomName,asc
+    public ResponseEntity<Page<RoomDTO>> getRoomsByBuildingId(
             @PathVariable Integer buildingId,
-            @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Sort sort){
-        return roomMapper.toDtoList(service.getRoomsByBuildingId(buildingId, sort));
+            @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Pageable pageable){
+
+        Page<Room> rooomsPage = service.getRoomsByBuildingId(buildingId, pageable);
+        List<RoomDTO> roomsDtos = roomMapper.toDtoList(rooomsPage.getContent());
+
+        return ResponseEntity.ok(new PageImpl<>(roomsDtos, pageable, rooomsPage.getTotalElements()));
     }
 
     @GetMapping(path = "/{buildingId}/tenants")
-    public List<TenantDTO> getTenantsByBuildingId(
+    public ResponseEntity<Page<TenantDTO>> getTenantsByBuildingId(
             @PathVariable Integer buildingId,
-            @SortDefault(sort = "lastName", direction = Sort.Direction.ASC) Sort sort){
-        return tenantMapper.toDtoList(service.getTenantsByBuildingID(buildingId, sort));
+            @SortDefault(sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable){
+        Page<Tenant> tenantsPage = service.getTenantsByBuildingID(buildingId, pageable);
+        List<TenantDTO> tenantDtos = tenantMapper.toDtoList(tenantsPage.getContent());
+
+        return ResponseEntity.ok(new PageImpl<>(tenantDtos, pageable, tenantsPage.getTotalElements()));
+    }
+
+    @PostMapping()
+    public ResponseEntity<BuildingDTO> postBuilding(@Valid @RequestBody BuildingDTO buildingDTO) {
+        Building building = buildingMapper.toEntity(buildingDTO);
+        Building savedBuilding = service.saveBuilding(building);
+
+        URI location =
+                ServletUriComponentsBuilder.fromCurrentRequest().path("/{buildingId}").buildAndExpand(savedBuilding.getBuildingId()).toUri();
+
+        return ResponseEntity.created(location).body(buildingMapper.toDto(savedBuilding));
+    }
+
+    @PutMapping(path = "/{buildingId}")
+    public ResponseEntity<BuildingDTO> putBuilding(@PathVariable Integer buildingId, @Valid @RequestBody BuildingDTO buildingDTO){
+        Building building = buildingMapper.toEntity(buildingDTO);
+        building = service.updateBuilding(buildingId, building);
+        return ResponseEntity.ok(buildingMapper.toDto(building));
+    }
+
+    @DeleteMapping(path = "/{buildingId}")
+    public ResponseEntity<Void> deleteBuilding(@PathVariable Integer buildingId){
+        service.deleteBuilding(buildingId);
+        return ResponseEntity.noContent().build();
     }
 }

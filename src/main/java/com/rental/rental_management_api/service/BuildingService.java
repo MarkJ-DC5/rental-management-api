@@ -8,6 +8,8 @@ import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -40,13 +42,28 @@ public class BuildingService {
         return getBuildingOrThrow(buildingId);
     }
 
-    public List<Room> getRoomsByBuildingId(Integer buildingId, Sort sort){
+    public Page<Room> getRoomsByBuildingId(Integer buildingId, Pageable pageable){
         getBuildingOrThrow(buildingId);
-        return roomRepository.findByBuilding_BuildingId(buildingId, sort);
+        return roomRepository.findByBuilding_BuildingId(buildingId, pageable);
     }
 
-    public List<Tenant> getTenantsByBuildingID(Integer buildingId, Sort sort){
+    public Page<Tenant> getTenantsByBuildingID(Integer buildingId, Pageable pageable){
         getBuildingOrThrow(buildingId);
-        return tenantRepository.findByRoom_Building_BuildingId(buildingId, sort);
+        return tenantRepository.findByRoom_Building_BuildingId(buildingId, pageable);
+    }
+
+    public Building saveBuilding(Building building){
+        return buildingRepository.save(building);
+    }
+
+    public Building updateBuilding(Integer buildingId, Building building){
+        getBuildingOrThrow(buildingId);
+        building.setBuildingId(buildingId);
+        return buildingRepository.save(building);
+    }
+
+    public void deleteBuilding(Integer buildingId){
+        Building building = getBuildingOrThrow(buildingId);
+        buildingRepository.delete(building);
     }
 }
