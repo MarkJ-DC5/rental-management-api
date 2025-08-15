@@ -4,12 +4,16 @@ import com.github.javafaker.Faker;
 import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
+import com.rental.rental_management_api.model.RoomType;
 import com.rental.rental_management_api.repository.BuildingRepository;
 import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
+import com.rental.rental_management_api.service.BuildingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -29,24 +33,46 @@ public class MyCLIRunner implements CommandLineRunner {
     @Autowired
     TenantRepository tenantRepository;
 
+    @Autowired
+    BuildingService buildingService;
+
+    @Value("${spring.sql.init.mode}")
+    private String sqlInitMode;
+
     @Override
     public void run(String... args) throws Exception {
+        log.debug("SQL Initialization Mode: " + sqlInitMode);
+        if (sqlInitMode.equalsIgnoreCase("always")){
+             initializeData();
+        }
+//
+//        log.info(buildingService.getAllBuildings().toString());
+//        log.info(buildingService.getBuildingById(1).toString());
+//        log.info(buildingService.getRoomsByBuildingId(1, Sort.by("roomName").descending()).toString());
+//        log.info(buildingService.getTenantsByBuildingID(1, Sort.by("lastName").descending()
+//                .and(Sort.by("firstName").descending())
+//        ).toString());
+    }
+
+    public void initializeData(){
+        log.debug("Initializing Data...");
         buildingRepository.saveAll(List.of(
                 new Building("Behind House", "Mario Santiago Rd", "Lambakin", "Marilao", "Bulacan"),
                 new Building("Cordero", "Cordero", "Lambakin", "Marilao", "Bulacan")
         ));
 
-        HashMap<String, Integer> buildingIdsAndCount = new HashMap<>();
-        buildingIdsAndCount.put("Behind House", 30);
-        buildingIdsAndCount.put("Cordero", 14);
+        HashMap<Integer, Integer> buildingIdsAndCount = new HashMap<>();
+        buildingIdsAndCount.put(1, 30);
+        buildingIdsAndCount.put(2, 14);
 
         Faker faker = new Faker(new Locale("en-PH"));
-        for (Map.Entry<String, Integer> entry : buildingIdsAndCount.entrySet()) {
+        for (Map.Entry<Integer, Integer> entry : buildingIdsAndCount.entrySet()) {
             Building building = buildingRepository.findById(entry.getKey()).get();
 
             for (int i = 1; i <= entry.getValue(); i++) {
                 int rent = new Random().nextInt(2) == 1 ? 2500 : 3500;
-                Room room = new Room(null, "Room " + i, Room.RoomType.Residential, rent, building);
+                String roomName = String.format("Room %02d", i);
+                Room room = new Room(null, roomName, RoomType.Residential, rent, building);
                 roomRepository.save(room);
 
                 int tenantsToCreate;
@@ -68,11 +94,3 @@ public class MyCLIRunner implements CommandLineRunner {
         }
     }
 }
-
-//        Optional<Building> building = buildingRepository.findById("Behind House");
-//
-//        if (building.isEmpty()){
-//            log.debug("Failed to retrieve details");
-//        } else {
-//            log.debug("Retrieved details: " + building.get());
-//        }
