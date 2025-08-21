@@ -3,7 +3,9 @@ package com.rental.rental_management_api.service;
 import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
+import com.rental.rental_management_api.exception.ParentHasChildException;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
+import com.rental.rental_management_api.model.RoomStatus;
 import com.rental.rental_management_api.repository.BuildingRepository;
 import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
@@ -18,12 +20,8 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class BuildingService {
-    /*
-    TODO
-    Add method-level JavaDocs for clarity if this grows.
-    You might want to add pagination for large data sets later (especially tenants).
-    Handle edge cases or caching if performance becomes an issue.
-     */
+    // TODO: Handle edge cases or caching if performance becomes an issue.
+
     private final BuildingRepository buildingRepository;
     private final RoomRepository roomRepository;
     private final TenantRepository tenantRepository;
@@ -43,9 +41,17 @@ public class BuildingService {
         return getBuildingOrThrow(buildingId);
     }
 
-    public Page<Room> getRoomsByBuildingId(Integer buildingId, Pageable pageable) {
+    public Page<Room> getRoomsByBuildingId(Integer buildingId, Pageable pageable, RoomStatus status) {
         getBuildingOrThrow(buildingId);
-        return roomRepository.findByBuilding_BuildingId(buildingId, pageable);
+
+        switch (status) {
+            case vacant:
+                return roomRepository.findByBuildingIDAndStatus(buildingId, true, pageable);
+            case occupied:
+                return roomRepository.findByBuildingIDAndStatus(buildingId, false, pageable);
+            default:
+                return roomRepository.findByBuilding_BuildingId(buildingId, pageable);
+        }
     }
 
     public Page<Tenant> getTenantsByBuildingID(Integer buildingId, Pageable pageable) {
@@ -57,14 +63,31 @@ public class BuildingService {
         return buildingRepository.save(building);
     }
 
-    public Building updateBuilding(Integer buildingId, Building building) {
-        getBuildingOrThrow(buildingId);
-        building.setBuildingId(buildingId);
+    public Building updateBuilding(Integer buildingId, Building buildingUpdate) {
+        Building building = getBuildingOrThrow(buildingId);
+        building.setBuildingName(buildingUpdate.getBuildingName());
+        building.setStreet(buildingUpdate.getStreet());
+        building.setBarangay(buildingUpdate.getBarangay());
+        building.setCity(buildingUpdate.getCity());
+        building.setProvince(buildingUpdate.getProvince());
+
         return buildingRepository.save(building);
     }
 
     public void deleteBuilding(Integer buildingId) {
         Building building = getBuildingOrThrow(buildingId);
+
+        if (building.getRooms().size() > 0) {
+            throw new ParentHasChildException("Building", "Room");
+        }
+
         buildingRepository.delete(building);
+    }
+
+    public Room saveRoom(Integer buildingId, Room room) {
+        Building building = getBuildingOrThrow(buildingId);
+
+        room.setBuilding(building);
+        return roomRepository.save(room);
     }
 }

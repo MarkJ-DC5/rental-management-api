@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.rental.rental_management_api.model.RoomType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,13 +33,13 @@ public class Room {
     @Column(name = "rent", nullable = false)
     private Integer rent;
 
-    //TODO: Cascade Rule
     @ManyToOne
     @JoinColumn(name = "building_id", referencedColumnName = "building_id", nullable = false)
     @JsonBackReference
     private Building building;
 
     @OneToMany(mappedBy = "room")
+    @Where(clause = "date_moved_out IS NULL")
     private List<Tenant> tenants = new ArrayList<>();
 
     public Room(Integer roomId, String roomName, RoomType roomType, Integer rent, Building building) {

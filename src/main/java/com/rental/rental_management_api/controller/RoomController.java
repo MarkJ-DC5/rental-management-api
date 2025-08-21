@@ -1,102 +1,97 @@
 package com.rental.rental_management_api.controller;
 
-import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
 import com.rental.rental_management_api.mapper.BuildingMapper;
+import com.rental.rental_management_api.mapper.PageMapper;
 import com.rental.rental_management_api.mapper.RoomMapper;
 import com.rental.rental_management_api.mapper.TenantMapper;
-import com.rental.rental_management_api.payload.BuildingDTO;
 import com.rental.rental_management_api.payload.RoomDTO;
 import com.rental.rental_management_api.payload.TenantDTO;
-import com.rental.rental_management_api.repository.BuildingRepository;
-import com.rental.rental_management_api.repository.RoomRepository;
-import com.rental.rental_management_api.repository.TenantRepository;
+import com.rental.rental_management_api.service.RoomService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.SortDefault;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.Comparator;
+import java.net.URI;
 import java.util.List;
 
-//@RestController
+@RestController
 @AllArgsConstructor
+@RequestMapping("/rooms")
+@Tag(name = "Room", description = "Endpoints for room management")
 public class RoomController {
 
-    private final RoomRepository roomRepository;
-    private final RoomMapper roomMapper;
+    private final RoomService service;
 
-    private final BuildingRepository buildingRepository;
     private final BuildingMapper buildingMapper;
-
-    private final TenantRepository tenantRepository;
+    private final RoomMapper roomMapper;
     private final TenantMapper tenantMapper;
+    private final PageMapper pageMapper;
 
-    @GetMapping(path = "/buildings")
-    public List<BuildingDTO> getAllBuildings(
-            @SortDefault(sort = "buildingId", direction = Sort.Direction.ASC) Sort sort) {
-        return buildingMapper.toDtoList(buildingRepository.findAll(sort));
+    @GetMapping(path = "/{roomId}")
+    @Operation(summary = "Retrieve a room by its ID")
+    public ResponseEntity<RoomDTO> getRoomById(
+            @PathVariable Integer roomId
+    ) {
+        return ResponseEntity.ok(roomMapper.toDto(service.getRoomById(roomId)));
     }
 
-    @GetMapping(path = "/buildings/{buildingId}")
-    public BuildingDTO getBuildingById(@PathVariable Integer buildingId) {
-        Building building = buildingRepository.findById(buildingId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Building ID: " + buildingId + " not found"
-                ));
-
-        return buildingMapper.toDto(building);
-    }
-
-//    @GetMapping(path = "/buildings/{buildingId}/rooms")
-//    // buildings/1/rooms?sort=roomName,desc&sort=rent,asc
-//    public List<RoomDTO> getRoomsByBuildingId(
-//            @PathVariable Integer buildingId,
-//            @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Sort sort){
-//        return roomMapper.toDtoList(roomRepository.findByBuilding_BuildingId(buildingId, sort));
-//    }
-
-    @GetMapping(path = "rooms/{roomId}")
-    public RoomDTO getRoomById(@PathVariable Integer roomId) {
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Room ID: " + roomId + " not found"
-                ));
-
-        return roomMapper.toDto(room);
-    }
-
-    @GetMapping(path = "rooms/{roomId}/tenants")
-    public List<TenantDTO> getTenantsByRoomId(
+    @GetMapping(path = "/{roomId}/tenants")
+    @Operation(summary = "Retrieve tenant/s of a specific room")
+    public ResponseEntity<List<TenantDTO>> getRoomById(
             @PathVariable Integer roomId,
-            @RequestParam(required = false, defaultValue = "false") boolean primaryOnly,
-            @SortDefault(sort = "isPrimary", direction = Sort.Direction.DESC) Sort sort) {
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Room ID: " + roomId + " not found"
-                ));
+            @RequestParam(defaultValue = "true") boolean primaryOnly
+    ) {
+        return ResponseEntity.ok(tenantMapper.toDtoList(service.getTenantsByRoomId(roomId, primaryOnly)));
+    }
 
-        List<Tenant> tenants = room.getTenants();
-        if (primaryOnly) {
-            tenants = tenants.stream().filter(Tenant::getIsPrimary).toList();
-        } else {
-            tenants = tenants.stream()
-                    .sorted(Comparator.comparing(Tenant::getIsPrimary).reversed()
-                            .thenComparing(Tenant::getLastName)
-                            .thenComparing(Tenant::getFirstName)
-                            .thenComparing(Tenant::getBirthDate).reversed()
-                    )
-                    .toList();
-        }
+    @PutMapping(path = "/{roomId}")
+    @Operation(summary = "Update the info of an existing room. Update of Building is not allowed")
+    public ResponseEntity<RoomDTO> putRoom(
+            @PathVariable Integer roomId,
+            @RequestBody @Valid RoomDTO roomDTO) {
+        Room room = roomMapper.toEntity(roomDTO);
+        room = service.updateRoom(roomId, room);
+        return ResponseEntity.ok(roomMapper.toDto(room));
+    }
 
-        return tenantMapper.toDtoList(tenants);
+    @DeleteMapping(path = "/{roomId}")
+    @Operation(summary = "Delete a room by its ID, having no more linked tenants")
+    public ResponseEntity<Void> deleteRoom(
+            @PathVariable Integer roomId) {
+        service.deleteRoom(roomId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(path = "/{roomId}/tenants")
+    @Operation(summary = "Create a New Tenant")
+    public ResponseEntity<TenantDTO> postTenant(
+            @PathVariable Integer roomId,
+            @RequestBody @Valid TenantDTO tenantDTO
+    ) {
+        Tenant tenant = tenantMapper.toEntity(tenantDTO);
+        Tenant savedTenant = service.saveTenant(roomId, tenant);
+
+        URI location =
+                ServletUriComponentsBuilder.fromCurrentRequest().path("/{tenantId}")
+                        .buildAndExpand(savedTenant.getTenantId()).toUri();
+
+        return ResponseEntity.created(location).body(tenantMapper.toDto(savedTenant));
+    }
+
+    @PutMapping(path = "/{roomId}/tenants")
+    @Operation(summary = "Update tenant status: set primary or mark as moved out")
+    public ResponseEntity<List<TenantDTO>> updateTenants(
+            @PathVariable Integer roomId,
+            @RequestBody List<@Valid TenantDTO> tenantDtos) {
+        List<Tenant> tenants = tenantMapper.toEntityList(tenantDtos);
+        tenants = service.updateTenants(roomId, tenants);
+
+        return ResponseEntity.ok(tenantMapper.toDtoList(tenants));
     }
 }

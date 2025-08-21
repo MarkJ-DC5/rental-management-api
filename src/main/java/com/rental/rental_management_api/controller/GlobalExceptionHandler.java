@@ -1,5 +1,7 @@
 package com.rental.rental_management_api.controller;
 
+import com.rental.rental_management_api.exception.ImmutableFieldException;
+import com.rental.rental_management_api.exception.ParentHasChildException;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.payload.ErrorDetails;
 import org.springframework.http.HttpStatus;
@@ -26,7 +28,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         FieldError::getDefaultMessage,
-                        (msg1, msg2) -> msg1 // in case of duplicate fields
+                        (msg1, msg2) -> msg1
                 ));
 
         ErrorDetails errorDetails = new ErrorDetails(
@@ -38,13 +40,41 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(ImmutableFieldException.class)
+    public ResponseEntity<ErrorDetails> handleImmutableFieldException(ImmutableFieldException ex, WebRequest request) {
+
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+
+        System.out.println(errorDetails);
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorDetails> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
+
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+
+        System.out.println(errorDetails);
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
 
         ErrorDetails errorDetails = new ErrorDetails(
                 LocalDateTime.now(),
-                ex.getMessage(),               // message from your exception
-                request.getDescription(false)  // e.g., the URL path
+                ex.getMessage(),
+                request.getDescription(false)
         );
 
         System.out.println(errorDetails);
@@ -52,13 +82,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorDetails> handleAllExceptions(Exception ex, WebRequest request) {
+    @ExceptionHandler(ParentHasChildException.class)
+    public ResponseEntity<ErrorDetails> handleParentHasChild(ParentHasChildException ex, WebRequest request) {
+
         ErrorDetails errorDetails = new ErrorDetails(
                 LocalDateTime.now(),
                 ex.getMessage(),
                 request.getDescription(false)
         );
-        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        System.out.println(errorDetails);
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
     }
+
+    // TODO:Best way to handle 404
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ErrorDetails> handleAllExceptions(Exception ex, WebRequest request) {
+//        ErrorDetails errorDetails = new ErrorDetails(
+//                LocalDateTime.now(),
+//                ex.getMessage(),
+//                request.getDescription(false)
+//        );
+//        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 }

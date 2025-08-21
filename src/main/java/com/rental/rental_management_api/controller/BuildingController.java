@@ -7,6 +7,7 @@ import com.rental.rental_management_api.mapper.BuildingMapper;
 import com.rental.rental_management_api.mapper.PageMapper;
 import com.rental.rental_management_api.mapper.RoomMapper;
 import com.rental.rental_management_api.mapper.TenantMapper;
+import com.rental.rental_management_api.model.RoomStatus;
 import com.rental.rental_management_api.payload.BuildingDTO;
 import com.rental.rental_management_api.payload.PageResponse;
 import com.rental.rental_management_api.payload.RoomDTO;
@@ -42,7 +43,7 @@ public class BuildingController {
     private final TenantMapper tenantMapper;
     private final PageMapper pageMapper;
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping()
     @Operation(summary = "Retrieve all buildings")
     public ResponseEntity<List<BuildingDTO>> getAllBuildings() {
         return ResponseEntity.ok(buildingMapper.toDtoList(service.getAllBuildings()));
@@ -61,10 +62,11 @@ public class BuildingController {
     // http://localhost:8080/buildings/1/rooms?page0&size=10&sort=rent,asc&sort=roomName,asc
     public ResponseEntity<PageResponse<RoomDTO>> getRoomsByBuildingId(
             @PathVariable Integer buildingId,
-            @ParameterObject @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Pageable pageable
+            @ParameterObject @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam(defaultValue = "all") RoomStatus status
     ) {
 
-        Page<Room> rooomsPage = service.getRoomsByBuildingId(buildingId, pageable);
+        Page<Room> rooomsPage = service.getRoomsByBuildingId(buildingId, pageable, status);
         List<RoomDTO> roomsDtos = roomMapper.toDtoList(rooomsPage.getContent());
 
         return ResponseEntity.ok(pageMapper.toPageResponse(rooomsPage, roomsDtos));
@@ -98,7 +100,7 @@ public class BuildingController {
     }
 
     @PutMapping(path = "/{buildingId}")
-    @Operation(summary = "Update an existing building")
+    @Operation(summary = "Update the info of an existing building")
     public ResponseEntity<BuildingDTO> putBuilding(
             @PathVariable Integer buildingId,
             @Valid @RequestBody BuildingDTO buildingDTO) {
@@ -108,10 +110,26 @@ public class BuildingController {
     }
 
     @DeleteMapping(path = "/{buildingId}")
-    @Operation(summary = "Delete a building by its ID")
+    @Operation(summary = "Delete a building by its ID, having no more linked rooms")
     public ResponseEntity<Void> deleteBuilding(
             @PathVariable Integer buildingId) {
         service.deleteBuilding(buildingId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(path = "/{buildingId}/rooms")
+    @Operation(summary = "Create a New Room")
+    public ResponseEntity<RoomDTO> postRoom(
+            @PathVariable Integer buildingId,
+            @RequestBody @Valid RoomDTO roomDto
+    ) {
+        Room room = roomMapper.toEntity(roomDto);
+        Room savedRoom = service.saveRoom(buildingId, room);
+
+        URI location =
+                ServletUriComponentsBuilder.fromCurrentRequest().path("/{roomId}")
+                        .buildAndExpand(savedRoom.getRoomId()).toUri();
+
+        return ResponseEntity.created(location).body(roomMapper.toDto(savedRoom));
     }
 }
