@@ -1,6 +1,11 @@
-DROP DATABASE IF EXISTS rental_management;
-CREATE DATABASE rental_management;
-USE rental_management;
+--DROP DATABASE IF EXISTS rental_management;
+--CREATE DATABASE rental_management;
+--USE rental_management;
+
+DROP TABLE IF EXISTS transaction;
+DROP TABLE IF EXISTS tenant;
+DROP TABLE IF EXISTS room;
+DROP TABLE IF EXISTS building;
 
 CREATE TABLE building (
 	building_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,7 +42,7 @@ CREATE TABLE tenant (
 	FOREIGN KEY (room_id) REFERENCES room(room_id)
 );
 
-CREATE TABLE payment (
+CREATE TABLE transaction (
 	transaction_id INT AUTO_INCREMENT PRIMARY KEY,
 	room_id INT NOT NULL,
 	tenant_id INT NOT NULL,

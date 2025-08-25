@@ -5,11 +5,22 @@ import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
 import com.rental.rental_management_api.exception.ParentHasChildException;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
+import com.rental.rental_management_api.mapper.BuildingMapper;
+import com.rental.rental_management_api.mapper.PageMapper;
+import com.rental.rental_management_api.mapper.RoomMapper;
+import com.rental.rental_management_api.mapper.TenantMapper;
 import com.rental.rental_management_api.model.RoomStatus;
+import com.rental.rental_management_api.model.TenantStatus;
+import com.rental.rental_management_api.payload.BuildingDTO;
+import com.rental.rental_management_api.payload.PageResponse;
+import com.rental.rental_management_api.payload.RoomDTO;
+import com.rental.rental_management_api.payload.TenantDTO;
 import com.rental.rental_management_api.repository.BuildingRepository;
 import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,60 +29,64 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Transactional
 @AllArgsConstructor
+@Slf4j
 public class BuildingService {
-    // TODO: Handle edge cases or caching if performance becomes an issue.
-
     private final BuildingRepository buildingRepository;
     private final RoomRepository roomRepository;
     private final TenantRepository tenantRepository;
 
-    private Building getBuildingOrThrow(Integer buildingId) {
+    private final BuildingMapper buildingMapper;
+    private final RoomMapper roomMapper;
+    private final TenantMapper tenantMapper;
+    private final PageMapper pageMapper;
+
+    protected Building getBuildingOrThrow(Integer buildingId) {
         return buildingRepository.findById(buildingId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Building", buildingId)
                 );
     }
 
-    public List<Building> getAllBuildings() {
-        return buildingRepository.findAll(Sort.by("buildingName").ascending());
+    public List<BuildingDTO> getAllBuildings() {
+        List<Building> buildings = buildingRepository.findAll(Sort.by("buildingName").ascending());
+        return buildingMapper.toDtoList(buildings);
     }
 
-    public Building getBuildingById(Integer buildingId) {
-        return getBuildingOrThrow(buildingId);
+    public BuildingDTO getBuildingById(Integer buildingId) {
+        return buildingMapper.toDto(getBuildingOrThrow(buildingId));
     }
 
-    public Page<Room> getRoomsByBuildingId(Integer buildingId, Pageable pageable, RoomStatus status) {
-        getBuildingOrThrow(buildingId);
+    public BuildingDTO saveBuilding(BuildingDTO buildingDto) {
+        Building building = buildingMapper.toEntity(buildingDto);
 
-        switch (status) {
-            case vacant:
-                return roomRepository.findByBuildingIDAndStatus(buildingId, true, pageable);
-            case occupied:
-                return roomRepository.findByBuildingIDAndStatus(buildingId, false, pageable);
-            default:
-                return roomRepository.findByBuilding_BuildingId(buildingId, pageable);
+        if (building.getBuildingId() != null){
+            log.warn("Building ID was specified in Building DTO request for saving a new building. " +
+                    "Specified Building ID will be disregarded");
+            building.setBuildingId(null);
         }
+
+        return buildingMapper.toDto(buildingRepository.save(building));
     }
 
-    public Page<Tenant> getTenantsByBuildingID(Integer buildingId, Pageable pageable) {
-        getBuildingOrThrow(buildingId);
-        return tenantRepository.findByRoom_Building_BuildingId(buildingId, pageable);
-    }
-
-    public Building saveBuilding(Building building) {
-        return buildingRepository.save(building);
-    }
-
-    public Building updateBuilding(Integer buildingId, Building buildingUpdate) {
+    public BuildingDTO updateBuilding(Integer buildingId, BuildingDTO buildingDtoUpdate) {
         Building building = getBuildingOrThrow(buildingId);
+        Building buildingUpdate = buildingMapper.toEntity(buildingDtoUpdate);
+
+        if (buildingUpdate.getBuildingId() != null && !building.getBuildingId().equals(buildingUpdate.getBuildingId())){
+            log.warn("Detected that a Building ID was specified in Building DTO request for updating building. " +
+                    "It is also does not matched with the Building ID specified in the path variable. " +
+                    "Disregarding the Building ID in the Building DTO request");
+        }
+
         building.setBuildingName(buildingUpdate.getBuildingName());
         building.setStreet(buildingUpdate.getStreet());
         building.setBarangay(buildingUpdate.getBarangay());
         building.setCity(buildingUpdate.getCity());
         building.setProvince(buildingUpdate.getProvince());
 
-        return buildingRepository.save(building);
+        return buildingMapper.toDto(building);
     }
 
     public void deleteBuilding(Integer buildingId) {
@@ -84,10 +99,49 @@ public class BuildingService {
         buildingRepository.delete(building);
     }
 
-    public Room saveRoom(Integer buildingId, Room room) {
-        Building building = getBuildingOrThrow(buildingId);
+    public PageResponse<RoomDTO> getRoomsByBuildingId(Integer buildingId, Pageable pageable, RoomStatus status) {
+        getBuildingOrThrow(buildingId);
 
-        room.setBuilding(building);
-        return roomRepository.save(room);
+        log.debug("Getting " + status + " Rooms...");
+        Page<Room> roomsPage;
+        switch (status) {
+            case vacant:
+                roomsPage = roomRepository.findByBuildingIdAndStatus(buildingId, false, pageable);
+                break;
+            case occupied:
+                roomsPage = roomRepository.findByBuildingIdAndStatus(buildingId, true, pageable);
+                break;
+            default:
+                roomsPage = roomRepository.findByBuilding_BuildingId(buildingId, pageable);
+                break;
+        }
+
+        List<RoomDTO> roomsDtos = roomMapper.toDtoList(roomsPage.getContent());
+
+        return pageMapper.toPageResponse(roomsPage, roomsDtos);
+    }
+
+    public PageResponse<TenantDTO> getTenantsByBuildingID(Integer buildingId, Pageable pageable, TenantStatus status,
+                                                          Boolean primaryOnly
+    ) {
+        getBuildingOrThrow(buildingId);
+
+        log.debug("Getting " + status + " tenants...");
+        Page<Tenant> tenantsPage;
+        switch (status) {
+            case active:
+                tenantsPage = tenantRepository.findByBuildingIdAndStatus(buildingId, true, primaryOnly, pageable);
+                break;
+            case inactive:
+                tenantsPage = tenantRepository.findByBuildingIdAndStatus(buildingId, false, primaryOnly, pageable);
+                break;
+            default:
+                tenantsPage = tenantRepository.findByBuildingIdAndStatus(buildingId, null, primaryOnly, pageable);
+                break;
+        }
+
+        List<TenantDTO> tenantDtos = tenantMapper.toDtoList(tenantsPage.getContent());
+
+        return pageMapper.toPageResponse(tenantsPage, tenantDtos);
     }
 }

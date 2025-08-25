@@ -38,7 +38,7 @@ public class Room {
     @JsonBackReference
     private Building building;
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = false)
     @Where(clause = "date_moved_out IS NULL")
     private List<Tenant> tenants = new ArrayList<>();
 
@@ -49,4 +49,34 @@ public class Room {
         this.rent = rent;
         this.building = building;
     }
+
+    public Tenant getPrimaryTenant() {
+        if (tenants.isEmpty()) {
+            return null;
+        }
+
+        long primaryTenantCount = tenants.stream()
+                .filter(Tenant::getIsPrimary)
+                .count();
+
+        if (primaryTenantCount > 1) {
+            throw new IllegalStateException(
+                    "Room " + roomId + " contains multiple primary tenants, which is invalid."
+            );
+        }
+
+        if (primaryTenantCount == 0) {
+            throw new IllegalStateException(
+                    "Room " + roomId + " has tenants but no primary tenant assigned."
+            );
+        }
+
+        return tenants.stream()
+                .filter(Tenant::getIsPrimary)
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException("Unexpected error: primary tenant not found.")
+                );
+    }
+
 }

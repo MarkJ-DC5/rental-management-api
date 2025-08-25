@@ -1,10 +1,10 @@
 package com.rental.rental_management_api.entity;
 
+import com.rental.rental_management_api.model.TenantGender;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-
 
 @Entity
 @Getter
@@ -36,7 +36,7 @@ public class Tenant {
 
     @Column(name = "gender", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Gender gender;
+    private TenantGender gender;
 
     @Column(name = "contact_number", nullable = false)
     private String contactNumber;
@@ -50,9 +50,4 @@ public class Tenant {
     @ManyToOne
     @JoinColumn(name = "room_id", referencedColumnName = "room_id", nullable = false)
     private Room room;
-
-    public enum Gender {
-        M,
-        F
-    }
 }

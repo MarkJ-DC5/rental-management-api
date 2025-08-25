@@ -1,13 +1,7 @@
 package com.rental.rental_management_api.controller;
 
-import com.rental.rental_management_api.entity.Building;
-import com.rental.rental_management_api.entity.Room;
-import com.rental.rental_management_api.entity.Tenant;
-import com.rental.rental_management_api.mapper.BuildingMapper;
-import com.rental.rental_management_api.mapper.PageMapper;
-import com.rental.rental_management_api.mapper.RoomMapper;
-import com.rental.rental_management_api.mapper.TenantMapper;
 import com.rental.rental_management_api.model.RoomStatus;
+import com.rental.rental_management_api.model.TenantStatus;
 import com.rental.rental_management_api.payload.BuildingDTO;
 import com.rental.rental_management_api.payload.PageResponse;
 import com.rental.rental_management_api.payload.RoomDTO;
@@ -18,7 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
@@ -31,82 +24,51 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@AllArgsConstructor
 @RequestMapping("/buildings")
-@Tag(name = "Building", description = "Endpoints for building management")
+@Tag(name = "1. Building", description = "Endpoints for building management")
+@AllArgsConstructor
 public class BuildingController {
 
     private final BuildingService service;
 
-    private final BuildingMapper buildingMapper;
-    private final RoomMapper roomMapper;
-    private final TenantMapper tenantMapper;
-    private final PageMapper pageMapper;
-
     @GetMapping()
-    @Operation(summary = "Retrieve all buildings")
+    @Operation(summary = "Retrieve all buildings.")
     public ResponseEntity<List<BuildingDTO>> getAllBuildings() {
-        return ResponseEntity.ok(buildingMapper.toDtoList(service.getAllBuildings()));
+        return ResponseEntity.ok(service.getAllBuildings());
     }
 
     @GetMapping(path = "/{buildingId}")
-    @Operation(summary = "Retrieve a building by its ID")
+    @Operation(summary = "Retrieve a building by its ID.")
     public ResponseEntity<BuildingDTO> getBuildingById(
             @PathVariable Integer buildingId
     ) {
-        return ResponseEntity.ok(buildingMapper.toDto(service.getBuildingById(buildingId)));
-    }
-
-    @GetMapping(path = "/{buildingId}/rooms")
-    @Operation(summary = "Retrieve rooms of a specific building")
-    // http://localhost:8080/buildings/1/rooms?page0&size=10&sort=rent,asc&sort=roomName,asc
-    public ResponseEntity<PageResponse<RoomDTO>> getRoomsByBuildingId(
-            @PathVariable Integer buildingId,
-            @ParameterObject @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Pageable pageable,
-            @RequestParam(defaultValue = "all") RoomStatus status
-    ) {
-
-        Page<Room> rooomsPage = service.getRoomsByBuildingId(buildingId, pageable, status);
-        List<RoomDTO> roomsDtos = roomMapper.toDtoList(rooomsPage.getContent());
-
-        return ResponseEntity.ok(pageMapper.toPageResponse(rooomsPage, roomsDtos));
-
-    }
-
-    @GetMapping(path = "/{buildingId}/tenants")
-    @Operation(summary = "Retrieve tenants of a specific building")
-    public ResponseEntity<PageResponse<TenantDTO>> getTenantsByBuildingId(
-            @PathVariable Integer buildingId,
-            @ParameterObject @SortDefault(sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable) {
-        Page<Tenant> tenantsPage = service.getTenantsByBuildingID(buildingId, pageable);
-        List<TenantDTO> tenantDtos = tenantMapper.toDtoList(tenantsPage.getContent());
-
-        return ResponseEntity.ok(pageMapper.toPageResponse(tenantsPage, tenantDtos));
+        return ResponseEntity.ok(service.getBuildingById(buildingId));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Create a new building")
+    @Operation(summary = "Create a new building.")
     public ResponseEntity<BuildingDTO> postBuilding(
             @Valid @RequestBody BuildingDTO buildingDTO
     ) {
-        Building building = buildingMapper.toEntity(buildingDTO);
-        Building savedBuilding = service.saveBuilding(building);
+        BuildingDTO savedBuilding = service.saveBuilding(buildingDTO);
 
         URI location =
                 ServletUriComponentsBuilder.fromCurrentRequest().path("/{buildingId}")
                         .buildAndExpand(savedBuilding.getBuildingId()).toUri();
 
-        return ResponseEntity.created(location).body(buildingMapper.toDto(savedBuilding));
+        return ResponseEntity.created(location).body(savedBuilding);
     }
 
     @PutMapping(path = "/{buildingId}")
-    @Operation(summary = "Update the info of an existing building")
+    @Operation(
+            summary = "Update an existing building",
+            description = "The building ID must be provided in the path variable. If included in the request body, it will be ignored."
+    )
     public ResponseEntity<BuildingDTO> putBuilding(
             @PathVariable Integer buildingId,
             @Valid @RequestBody BuildingDTO buildingDTO) {
-        Building building = buildingMapper.toEntity(buildingDTO);
-        building = service.updateBuilding(buildingId, building);
-        return ResponseEntity.ok(buildingMapper.toDto(building));
+        BuildingDTO buildingDto = service.updateBuilding(buildingId, buildingDTO);
+        return ResponseEntity.ok(buildingDto);
     }
 
     @DeleteMapping(path = "/{buildingId}")
@@ -117,19 +79,34 @@ public class BuildingController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(path = "/{buildingId}/rooms")
-    @Operation(summary = "Create a New Room")
-    public ResponseEntity<RoomDTO> postRoom(
+    @GetMapping(path = "/{buildingId}/rooms")
+    @Operation(summary = "Retrieve rooms of a specific building.",
+            description = "Supports pagination, sorting (e.g., by roomName, rent), and filtering by room status."
+    )
+    // http://localhost:8080/buildings/1/rooms?page0&size=10&sort=rent,asc&sort=roomName,asc
+    public ResponseEntity<PageResponse<RoomDTO>> getRoomsByBuildingId(
             @PathVariable Integer buildingId,
-            @RequestBody @Valid RoomDTO roomDto
+            @ParameterObject @SortDefault(sort = "roomName", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam(defaultValue = "all") RoomStatus status
     ) {
-        Room room = roomMapper.toEntity(roomDto);
-        Room savedRoom = service.saveRoom(buildingId, room);
+        return ResponseEntity.ok(service.getRoomsByBuildingId(buildingId, pageable, status));
 
-        URI location =
-                ServletUriComponentsBuilder.fromCurrentRequest().path("/{roomId}")
-                        .buildAndExpand(savedRoom.getRoomId()).toUri();
+    }
 
-        return ResponseEntity.created(location).body(roomMapper.toDto(savedRoom));
+    @GetMapping(path = "/{buildingId}/tenants")
+    @Operation(
+            summary = "Retrieve tenants of a specific building.",
+            description = "Supports pagination, sorting (e.g., by dateMovedIn, firstName), and filtering by tenant " +
+                    "status (active = currently living, inactive = moved out, all) and by whether the tenant is the" +
+                    " " +
+                    "primary tenant of a room."
+    )
+    public ResponseEntity<PageResponse<TenantDTO>> getTenantsByBuildingId(
+            @PathVariable Integer buildingId,
+            @ParameterObject @SortDefault(sort = "room.roomId", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam(defaultValue = "all") TenantStatus status,
+            @RequestParam(defaultValue = "true") Boolean primaryOnly
+    ) {
+        return ResponseEntity.ok(service.getTenantsByBuildingID(buildingId, pageable, status, primaryOnly));
     }
 }

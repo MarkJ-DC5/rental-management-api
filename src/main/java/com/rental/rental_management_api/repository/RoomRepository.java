@@ -20,7 +20,7 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
                     (:hasTenant = False AND SIZE(r.tenants) = 0)
                )
             """)
-    Page<Room> findByBuildingIDAndStatus(@Param("buildingId") Integer buildingId,
+    Page<Room> findByBuildingIdAndStatus(@Param("buildingId") Integer buildingId,
                                          @Param("hasTenant") Boolean hasTenant,
                                          Pageable pageable);
 }

@@ -1,129 +1,77 @@
 package com.rental.rental_management_api.service;
 
+import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
-import com.rental.rental_management_api.entity.Tenant;
-import com.rental.rental_management_api.exception.ImmutableFieldException;
 import com.rental.rental_management_api.exception.ParentHasChildException;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
+import com.rental.rental_management_api.mapper.BuildingMapper;
+import com.rental.rental_management_api.mapper.PageMapper;
+import com.rental.rental_management_api.mapper.RoomMapper;
+import com.rental.rental_management_api.mapper.TenantMapper;
+import com.rental.rental_management_api.payload.RoomDTO;
+import com.rental.rental_management_api.repository.BuildingRepository;
 import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 @Service
+@Transactional
 @AllArgsConstructor
 @Slf4j
 public class RoomService {
-    // TODO: Handle edge cases or caching if performance becomes an issue.
-
+    private final BuildingRepository buildingRepository;
     private final RoomRepository roomRepository;
     private final TenantRepository tenantRepository;
 
-    private Room getRoomOrThrow(Integer roomId) {
+    private final BuildingMapper buildingMapper;
+    private final RoomMapper roomMapper;
+    private final TenantMapper tenantMapper;
+    private final PageMapper pageMapper;
+
+    private final BuildingService buildingService;
+
+    protected Room getRoomOrThrow(Integer roomId) {
         return roomRepository.findById(roomId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Room", roomId)
                 );
     }
 
-    public Room getRoomById(Integer roomId) {
-        return getRoomOrThrow(roomId);
+    public RoomDTO getRoomById(Integer roomId) {
+        return roomMapper.toDto(getRoomOrThrow(roomId));
     }
 
-    public List<Tenant> getTenantsByRoomId(Integer roomId, boolean primaryOnly) {
-        Room room = getRoomOrThrow(roomId);
-        List<Tenant> tenants = room.getTenants();
+    public RoomDTO saveRoom(Integer buildingId, RoomDTO roomDto) {
+        Building building = buildingService.getBuildingOrThrow(buildingId);
 
-        log.debug("Retrieving tenants for Room " + roomId + " amd primaryOnly = " + primaryOnly);
-        if (primaryOnly) {
-            tenants = tenants
-                    .stream()
-                    .filter(Tenant::getIsPrimary)
-                    .sorted(
-                            Comparator.comparing(Tenant::getIsPrimary).reversed()
-                                    .thenComparing(Tenant::getLastName, String.CASE_INSENSITIVE_ORDER)
-                                    .thenComparing(Tenant::getFirstName, String.CASE_INSENSITIVE_ORDER)
-                    )
-                    .toList();
+        Room room = roomMapper.toEntity(roomDto);
+        room.setRoomId(null);
+        room.setBuilding(building);
 
-
-        }
-
-        return tenants;
+        return roomMapper.toDto(roomRepository.save(room));
     }
 
-    public Room updateRoom(Integer roomId, Room roomUpdate) {
+    public RoomDTO updateRoom(Integer roomId, RoomDTO roomDtoUpdate) {
         Room room = getRoomOrThrow(roomId);
 
-        if (room.getBuilding().getBuildingId() != roomUpdate.getBuilding().getBuildingId()) {
-            throw new ImmutableFieldException("Building ID", "Room");
-        }
+        room.setRoomName(roomDtoUpdate.getRoomName());
+        room.setRoomType(roomDtoUpdate.getRoomType());
+        room.setRent(roomDtoUpdate.getRent());
 
-        room.setRoomName(roomUpdate.getRoomName());
-        room.setRoomType(roomUpdate.getRoomType());
-        room.setRoomId(roomUpdate.getRent());
-
-        return roomRepository.save(room);
+        return roomMapper.toDto(room);
     }
 
     public void deleteRoom(Integer roomId) {
         Room room = getRoomOrThrow(roomId);
 
+        // TODO: Handle case of inactive tenants
         if (room.getTenants().size() > 0) {
             throw new ParentHasChildException("Room", "tenant");
         }
 
         roomRepository.delete(room);
-    }
-
-    public Tenant saveTenant(Integer roomId, Tenant tenant) {
-        Room room = getRoomOrThrow(roomId);
-        tenant.setRoom(room);
-        return tenantRepository.save(tenant);
-    }
-
-    public List<Tenant> updateTenants(Integer roomId, List<Tenant> tenantsUpdate) {
-        long primaryCount = tenantsUpdate.stream()
-                .filter(Tenant::getIsPrimary)
-                .count();
-
-        log.debug("Number of Primary Tenants: " + primaryCount);
-        if (primaryCount != 1) {
-            throw new IllegalArgumentException("Exactly one tenant must be marked as primary");
-        }
-
-        Room room = getRoomOrThrow(roomId);
-        List<Tenant> tenants = room.getTenants();
-
-        Map<Integer, Tenant> updatesById = tenantsUpdate.stream()
-                .collect(
-                        Collectors.toMap(Tenant::getTenantId, t -> t)
-                );
-
-        Set<Integer> originalIds = tenants.stream()
-                .map(Tenant::getTenantId)
-                .collect(Collectors.toSet());
-
-        log.debug("Tenant IDs: " + originalIds);
-        log.debug("Tenant IDs for Update: " + updatesById.keySet());
-        if (!originalIds.equals(updatesById.keySet())) {
-            throw new IllegalArgumentException("Tenant IDs do not match original tenants");
-        }
-
-        log.debug("Updating Tenants isPrimary and/or dateMovedOut...");
-        tenants.forEach(original -> {
-            Tenant updated = updatesById.get(original.getTenantId());
-            original.setIsPrimary(updated.getIsPrimary());
-            original.setDateMovedOut(updated.getDateMovedOut());
-        });
-
-        return tenants;
     }
 }

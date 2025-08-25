@@ -2,7 +2,9 @@ package com.rental.rental_management_api.payload;
 
 import com.rental.rental_management_api.model.RoomType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Getter
@@ -11,6 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @ToString
+@Schema(description = "Data Transfer Object for a Room")
 public class RoomDTO {
     @Schema(description = "Unique identifier of the room", example = "1")
     private Integer roomId;
@@ -19,11 +22,14 @@ public class RoomDTO {
     @Schema(description = "Name of the room", example = "Room 1")
     private String roomName;
 
-    @NotBlank(message = "Room Type cannot be blank")
-    @Schema(description = "Type of the riin", example = "Residential")
+    @NotNull(message = "Room Type cannot be blank")
+    @Schema(description = "Type of the room", example = "Residential")
     private RoomType roomType;
 
-    @NotBlank(message = "Rent cannot be blank")
+    @Min(value = 1, message = "Rent must be greater than 0")
     @Schema(description = "Rent of the room", example = "3000")
     private Integer rent;
+
+    @Schema(description = "Building ID of a room", example = "1")
+    private Integer buildingId;
 }

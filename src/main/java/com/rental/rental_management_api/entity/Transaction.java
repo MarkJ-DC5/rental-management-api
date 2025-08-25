@@ -1,10 +1,10 @@
 package com.rental.rental_management_api.entity;
 
+import com.rental.rental_management_api.model.TransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-
 
 @Entity
 @Getter
@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @ToString
-public class Payment {
+public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "transaction_id")
@@ -42,11 +42,4 @@ public class Payment {
     @ManyToOne
     @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", nullable = false)
     private Tenant tenant;
-
-    public enum TransactionType {
-        Rent,
-        Utilities,
-        Downpayment,
-        Others
-    }
 }

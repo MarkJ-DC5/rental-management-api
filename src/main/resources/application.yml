@@ -13,10 +13,16 @@ spring:
       ddl-auto: validate
     database: mysql
     show-sql: true
-
+  output:
+    ansi:
+      enabled: always
 server:
   port: 8080
 
+springdoc:
+  swagger-ui:
+    tagsSorter: alpha
+    operationsSorter: alpha
 #management:
 #  endpoints:
 #    web:

@@ -22,6 +22,8 @@ public interface BuildingMapper {
     @Mapping(target = "barangay", expression = "java(buildingDTO.getAddress().split(\", \")[1])")
     @Mapping(target = "city", expression = "java(buildingDTO.getAddress().split(\", \")[2])")
     @Mapping(target = "province", expression = "java(buildingDTO.getAddress().split(\", \")[3])")
+    @Mapping(target = "buildingId", ignore = true)
+    @Mapping(target = "rooms", ignore = true)
     Building toEntity(BuildingDTO buildingDTO);
 
     List<BuildingDTO> toDtoList(List<Building> buildings);

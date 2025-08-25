@@ -2,11 +2,18 @@ spring:
   sql:
     init:
       mode: never
+  jpa:
+    show-sql: true
+  devtools:
+    restart:
+      enabled: false
 
 logging:
   level:
-    org:
-      springframework: debug
-    com:
-      rental:
-        rental_management_api: debug
+    org.springframework: debug
+    org.hibernate.orm.jdbc.bind: TRACE # shows the actual parameter values
+    com.rental.rental_management_api: debug
+
+springdoc:
+  swagger-ui:
+    tryItOutEnabled: true

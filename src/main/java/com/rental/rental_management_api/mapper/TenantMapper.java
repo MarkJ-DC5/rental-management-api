@@ -1,11 +1,9 @@
 package com.rental.rental_management_api.mapper;
 
-import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
 import com.rental.rental_management_api.payload.TenantDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -13,12 +11,13 @@ import java.util.List;
 
 @Mapper(componentModel = "spring") // Makes it injectable in Spring
 public interface TenantMapper {
-    TenantMapper INSTANCE = Mappers.getMapper(TenantMapper.class);
 
     @Mapping(target = "age", expression = "java(calculateAge(tenant.getBirthDate()))")
-    @Mapping(target = "roomId", expression = "java(getRoomId(tenant.getRoom()))")
+    @Mapping(target = "roomId", expression = "java(tenant.getRoom().getRoomId())")
     TenantDTO toDto(Tenant tenant);
 
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "room", ignore = true)
     Tenant toEntity(TenantDTO tenantDto);
 
     List<TenantDTO> toDtoList(List<Tenant> tenants);
@@ -28,9 +27,5 @@ public interface TenantMapper {
     default Integer calculateAge(LocalDate birthdate) {
         if (birthdate == null) return null;
         return Period.between(birthdate, LocalDate.now()).getYears();
-    }
-
-    default Integer getRoomId(Room room) {
-        return room.getRoomId();
     }
 }

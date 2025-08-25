@@ -1,13 +1,6 @@
 package com.rental.rental_management_api.controller;
 
-import com.rental.rental_management_api.entity.Room;
-import com.rental.rental_management_api.entity.Tenant;
-import com.rental.rental_management_api.mapper.BuildingMapper;
-import com.rental.rental_management_api.mapper.PageMapper;
-import com.rental.rental_management_api.mapper.RoomMapper;
-import com.rental.rental_management_api.mapper.TenantMapper;
 import com.rental.rental_management_api.payload.RoomDTO;
-import com.rental.rental_management_api.payload.TenantDTO;
 import com.rental.rental_management_api.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,49 +11,53 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
+@Tag(name = "2. Room", description = "Endpoints for room management")
 @AllArgsConstructor
-@RequestMapping("/rooms")
-@Tag(name = "Room", description = "Endpoints for room management")
 public class RoomController {
 
     private final RoomService service;
 
-    private final BuildingMapper buildingMapper;
-    private final RoomMapper roomMapper;
-    private final TenantMapper tenantMapper;
-    private final PageMapper pageMapper;
-
-    @GetMapping(path = "/{roomId}")
+    @GetMapping(path = "/rooms/{roomId}")
     @Operation(summary = "Retrieve a room by its ID")
     public ResponseEntity<RoomDTO> getRoomById(
             @PathVariable Integer roomId
     ) {
-        return ResponseEntity.ok(roomMapper.toDto(service.getRoomById(roomId)));
+        return ResponseEntity.ok(service.getRoomById(roomId));
     }
 
-    @GetMapping(path = "/{roomId}/tenants")
-    @Operation(summary = "Retrieve tenant/s of a specific room")
-    public ResponseEntity<List<TenantDTO>> getRoomById(
-            @PathVariable Integer roomId,
-            @RequestParam(defaultValue = "true") boolean primaryOnly
+    @PostMapping(path = "/buildings/{buildingId}/rooms")
+    @Operation(summary = "Create a New Room",
+            description = "The Building ID must be provided in the path variable. If included in the request body, it" +
+                    " will be ignored."
+    )
+    public ResponseEntity<RoomDTO> postRoom(
+            @PathVariable Integer buildingId,
+            @RequestBody @Valid RoomDTO roomDto
     ) {
-        return ResponseEntity.ok(tenantMapper.toDtoList(service.getTenantsByRoomId(roomId, primaryOnly)));
+        RoomDTO savedRoomDto = service.saveRoom(buildingId, roomDto);
+
+        URI location =
+                ServletUriComponentsBuilder.fromCurrentRequest().path("/{roomId}")
+                        .buildAndExpand(savedRoomDto.getRoomId()).toUri();
+
+        return ResponseEntity.created(location).body(savedRoomDto);
     }
 
-    @PutMapping(path = "/{roomId}")
-    @Operation(summary = "Update the info of an existing room. Update of Building is not allowed")
+    @PutMapping(path = "/rooms/{roomId}")
+    @Operation(
+            summary = "Update an existing room",
+            description = "The room ID must be provided in the path variable. If included in the request body, it " +
+                    "will be ignored. The Building ID cannot be changed by any means."
+    )
     public ResponseEntity<RoomDTO> putRoom(
             @PathVariable Integer roomId,
             @RequestBody @Valid RoomDTO roomDTO) {
-        Room room = roomMapper.toEntity(roomDTO);
-        room = service.updateRoom(roomId, room);
-        return ResponseEntity.ok(roomMapper.toDto(room));
+        return ResponseEntity.ok(service.updateRoom(roomId, roomDTO));
     }
 
-    @DeleteMapping(path = "/{roomId}")
+    @DeleteMapping(path = "/rooms/{roomId}")
     @Operation(summary = "Delete a room by its ID, having no more linked tenants")
     public ResponseEntity<Void> deleteRoom(
             @PathVariable Integer roomId) {
@@ -68,30 +65,21 @@ public class RoomController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(path = "/{roomId}/tenants")
-    @Operation(summary = "Create a New Tenant")
-    public ResponseEntity<TenantDTO> postTenant(
-            @PathVariable Integer roomId,
-            @RequestBody @Valid TenantDTO tenantDTO
-    ) {
-        Tenant tenant = tenantMapper.toEntity(tenantDTO);
-        Tenant savedTenant = service.saveTenant(roomId, tenant);
 
-        URI location =
-                ServletUriComponentsBuilder.fromCurrentRequest().path("/{tenantId}")
-                        .buildAndExpand(savedTenant.getTenantId()).toUri();
+//
 
-        return ResponseEntity.created(location).body(tenantMapper.toDto(savedTenant));
-    }
-
-    @PutMapping(path = "/{roomId}/tenants")
-    @Operation(summary = "Update tenant status: set primary or mark as moved out")
-    public ResponseEntity<List<TenantDTO>> updateTenants(
-            @PathVariable Integer roomId,
-            @RequestBody List<@Valid TenantDTO> tenantDtos) {
-        List<Tenant> tenants = tenantMapper.toEntityList(tenantDtos);
-        tenants = service.updateTenants(roomId, tenants);
-
-        return ResponseEntity.ok(tenantMapper.toDtoList(tenants));
-    }
+//
+//    @PutMapping(path = "/{roomId}/tenants")
+//    @Operation(summary = "Update tenant status: set primary or mark as moved out")
+//    public ResponseEntity<List<TenantDTO>> updateTenants(
+//            @PathVariable Integer roomId,
+//            @RequestBody List<@Valid TenantDTO> tenantDtos) {
+//        log.debug("Tenants DTO: " + tenantDtos);
+//        List<Tenant> tenants = tenantMapper.toEntityList(tenantDtos);
+//        log.debug("Tenants: " + tenants);
+//
+//        tenants = service.updateTenants(roomId, tenants);
+//
+//        return ResponseEntity.ok(tenantMapper.toDtoList(tenants));
+//    }
 }

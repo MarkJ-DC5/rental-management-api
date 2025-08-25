@@ -1,5 +1,6 @@
 package com.rental.rental_management_api.payload;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,9 @@ import java.time.LocalDateTime;
 @Builder
 @ToString
 public class ErrorDetails {
-    private LocalDateTime timestamp;
     private String message;
     private Object details;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime timestamp;
 }
