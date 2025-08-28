@@ -1,19 +1,26 @@
 package com.rental.rental_management_api.service;
 
-import com.rental.rental_management_api.entity.Transaction;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
+import com.rental.rental_management_api.entity.Transaction;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.mapper.PageMapper;
-import com.rental.rental_management_api.mapper.TransactionMapper;
 import com.rental.rental_management_api.mapper.RoomMapper;
 import com.rental.rental_management_api.mapper.TenantMapper;
+import com.rental.rental_management_api.mapper.TransactionMapper;
+import com.rental.rental_management_api.payload.PageResponse;
+import com.rental.rental_management_api.payload.RoomDTO;
 import com.rental.rental_management_api.payload.TransactionDTO;
 import com.rental.rental_management_api.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @Transactional
@@ -37,6 +44,14 @@ public class TransactionService {
                 );
     }
 
+    public PageResponse<TransactionDTO> getAllTransactions(LocalDate startDate, LocalDate endDate,
+                                                                 Pageable pageable) {
+        Page transactionsPage = transactionRepository.findByTransactionDateBetween(startDate, endDate, pageable);
+        List<TransactionDTO> transactionDtos = transactionMapper.toDtoList(transactionsPage.getContent());
+
+        return pageMapper.toPageResponse(transactionsPage, transactionDtos);
+    }
+
     public TransactionDTO getTransactionById(Integer transactionId) {
         return transactionMapper.toDto(getTransactionOrThrow(transactionId));
     }
@@ -51,6 +66,7 @@ public class TransactionService {
         }
 
         Transaction transaction = transactionMapper.toEntity(transactionDto);
+        transaction.setTransactionId(null);
         transaction.setRoom(room);
         transaction.setTenant(primaryTenant);
 
@@ -79,16 +95,46 @@ public class TransactionService {
         return transactionMapper.toDto(transaction);
     }
 
+    public void deleteTransaction(Integer transactionId) {
+        Transaction payment = getTransactionOrThrow(transactionId);
+
+        transactionRepository.delete(payment);
+    }
+
+    public PageResponse<TransactionDTO> getTransactionsByRoomId(Integer roomId, LocalDate startDate, LocalDate endDate,
+                                                   Pageable pageable){
+        roomService.getRoomOrThrow(roomId);
+
+        Page<Transaction> transactionPage = transactionRepository.findByRoom_RoomIdAndTransactionDateBetween(roomId,
+                startDate, endDate, pageable);
+        List<TransactionDTO> transactionDtos = transactionMapper.toDtoList(transactionPage.getContent());
+
+        return pageMapper.toPageResponse(transactionPage, transactionDtos);
+    }
+
+    public PageResponse<TransactionDTO> getTransactionsByTenantId(Integer tenantId, LocalDate startDate,
+                                                                  LocalDate endDate,
+                                                                Pageable pageable){
+        Tenant tenant = tenantService.getTenantOrThrow(tenantId);
+
+        if (!tenant.getIsPrimary()){
+            log.warn("Tenant " + tenant.getTenantId() + " is not a primary tenant. It's likely no transactions will " +
+                    "be returned. Unless the specified tenant was previously a primary Tenant.");
+        }
+
+        Page<Transaction> transactionsPage = transactionRepository.findByTenant_TenantIdAndTransactionDateBetween(tenantId,
+                startDate, endDate, pageable);
+        List<TransactionDTO> transactionDtos = transactionMapper.toDtoList(transactionsPage.getContent());
+
+        return pageMapper.toPageResponse(transactionsPage, transactionDtos);
+    }
+
 
     /*
 
 
 
-    public void deleteTransaction(Integer transactionId) {
-        Transaction payment = getTransactionOrThrow(transactionId);
 
-        paymentRepository.delete(payment);
-    }
 
      */
 }

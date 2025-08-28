@@ -68,7 +68,7 @@ public class TenantController {
         return ResponseEntity.ok(service.updateTenant(tenantId, tenantDto));
     }
 
-    @PutMapping(path = "rooms/{roomdId}tenants/change-primary")
+    @PutMapping(path = "/rooms/{roomdId}/tenants/change-primary")
     @Operation(summary = "Change the assigned primary tenant of a room.")
     public ResponseEntity<TenantDTO> changePrimaryTenant(
             @PathVariable Integer roomdId,
@@ -76,7 +76,7 @@ public class TenantController {
         return ResponseEntity.ok(service.changePrimaryTenant(roomdId, body));
     }
 
-    @PutMapping(path = "rooms/{roomdId}tenants/move-out")
+    @PutMapping(path = "/rooms/{roomdId}/tenants/move-out")
     @Operation(summary = "Set the move-out date of all tenants in a room.",
             description = "The action will set the status of the tenants to inactive and making the room vacant.")
     public ResponseEntity<List<TenantDTO>> moveOutTenants(

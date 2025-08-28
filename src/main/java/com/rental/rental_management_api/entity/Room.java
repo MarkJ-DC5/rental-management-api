@@ -1,6 +1,7 @@
 package com.rental.rental_management_api.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.rental.rental_management_api.exception.PrimaryTenantConstraintException;
 import com.rental.rental_management_api.model.RoomType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -60,13 +61,13 @@ public class Room {
                 .count();
 
         if (primaryTenantCount > 1) {
-            throw new IllegalStateException(
+            throw new PrimaryTenantConstraintException(
                     "Room " + roomId + " contains multiple primary tenants, which is invalid."
             );
         }
 
         if (primaryTenantCount == 0) {
-            throw new IllegalStateException(
+            throw new PrimaryTenantConstraintException(
                     "Room " + roomId + " has tenants but no primary tenant assigned."
             );
         }
@@ -75,7 +76,7 @@ public class Room {
                 .filter(Tenant::getIsPrimary)
                 .findFirst()
                 .orElseThrow(() ->
-                        new IllegalStateException("Unexpected error: primary tenant not found.")
+                        new PrimaryTenantConstraintException("Unexpected error: primary tenant not found.")
                 );
     }
 

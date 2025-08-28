@@ -27,5 +27,5 @@ public interface TenantRepository extends JpaRepository<Tenant, Integer> {
                                            @Param("isPrimary") Boolean isPrimary,
                                            Pageable pageable);
 
-
+    Integer countByRoom_RoomId(Integer roomId);
 }

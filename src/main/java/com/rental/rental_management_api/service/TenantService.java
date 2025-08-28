@@ -2,6 +2,8 @@ package com.rental.rental_management_api.service;
 
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
+import com.rental.rental_management_api.exception.BusinessConstraintException;
+import com.rental.rental_management_api.exception.PrimaryTenantConstraintException;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.mapper.BuildingMapper;
 import com.rental.rental_management_api.mapper.PageMapper;
@@ -37,7 +39,7 @@ public class TenantService {
 
     private final RoomService roomService;
 
-    private Tenant getTenantOrThrow(Integer tenantId) {
+    protected Tenant getTenantOrThrow(Integer tenantId) {
         return tenantRepository.findById(tenantId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Tenant", tenantId)
@@ -71,12 +73,23 @@ public class TenantService {
         Room room = roomService.getRoomOrThrow(roomId);
 
         Tenant tenant = tenantMapper.toEntity(tenantDTO);
+        tenant.setTenantId(null);
+        tenant.setDateMovedOut(null);
         tenant.setRoom(room);
 
-        if (room.getPrimaryTenant() == null && !tenant.getIsPrimary()) {
-            throw new IllegalStateException(
-                    "Room " + roomId + " has no primary tenant. The tenant being added must have isPrimary = true."
-            );
+        if (room.getPrimaryTenant() == null) {
+            if (!tenant.getIsPrimary()) {
+                throw new PrimaryTenantConstraintException(
+                        "Room " + roomId + " has no primary tenant. The tenant being added must have isPrimary = true."
+                );
+            }
+        } else {
+            if (tenant.getIsPrimary()) {
+                throw new PrimaryTenantConstraintException(
+                        "Room " + roomId + " already has primary tenant. The tenant being added must have isPrimary =" +
+                                " false."
+                );
+            }
         }
 
         return tenantMapper.toDto(tenantRepository.save(tenant));
@@ -97,15 +110,16 @@ public class TenantService {
 
     public TenantDTO changePrimaryTenant(Integer roomId, AssignPrimaryTenantRequest body) {
         Room room = roomService.getRoomOrThrow(roomId);
-        List<Tenant> tenants = room.getTenants();
 
         Integer newPrimaryTenantID = body.getNewPrimaryTenantID();
 
         Tenant currentPrimaryTenant = room.getPrimaryTenant();
         if (currentPrimaryTenant.getTenantId().equals(newPrimaryTenantID)) {
-            log.info("Tenant " + newPrimaryTenantID + " is already the primary tenant");
+            log.info("Tenant " + newPrimaryTenantID + " is already the primary tenant. No change will happen");
             return tenantMapper.toDto(currentPrimaryTenant);
         }
+
+        List<Tenant> tenants = room.getTenants();
 
         Tenant newPrimaryTenant = tenants.stream()
                 .filter(tenant ->
@@ -134,9 +148,16 @@ public class TenantService {
         Room room = tenant.getRoom();
 
         if (room.getTenants().size() > 1 && tenant.getIsPrimary()) {
-            throw new IllegalStateException(
+            throw new PrimaryTenantConstraintException(
                     "Tenant " + tenantId + " is the primary tenant of Room " + room.getRoomId() +
                             " and cannot be deleted while there are other tenants. Assign a different primary tenant first before deleting this tenant.");
+        }
+
+        if (tenant.getDateMovedOut() == null) {
+            throw new BusinessConstraintException(
+                    "Tenant " + tenantId + " is still active. Make them first inactive by setting the date moved out " +
+                            "before deleting"
+            );
         }
 
 

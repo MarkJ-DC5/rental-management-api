@@ -4,12 +4,16 @@ import com.github.javafaker.Faker;
 import com.rental.rental_management_api.entity.Building;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
+import com.rental.rental_management_api.entity.Transaction;
 import com.rental.rental_management_api.model.RoomType;
 import com.rental.rental_management_api.model.TenantGender;
+import com.rental.rental_management_api.model.TransactionType;
 import com.rental.rental_management_api.repository.BuildingRepository;
 import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
+import com.rental.rental_management_api.repository.TransactionRepository;
 import com.rental.rental_management_api.service.BuildingService;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +21,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -26,15 +31,12 @@ public class MyCLIRunner implements CommandLineRunner {
 
     @Autowired
     BuildingRepository buildingRepository;
-
     @Autowired
     RoomRepository roomRepository;
-
     @Autowired
     TenantRepository tenantRepository;
-
     @Autowired
-    BuildingService buildingService;
+    TransactionRepository transactionRepository;
 
     @Value("${spring.sql.init.mode}")
     private String sqlInitMode;
@@ -121,6 +123,44 @@ public class MyCLIRunner implements CommandLineRunner {
                             room
                     );
                     tenantRepository.save(tenant);
+
+                    if (j == 0){
+                        int numPayments = 3 + random.nextInt(4);
+
+                        // calculate start month
+                        int startMonth = 8 - numPayments + 1; // ensure span ends at August
+                        List<YearMonth> months = new ArrayList<>();
+                        for (int m = startMonth; m <= 8; m++) {
+                            months.add(YearMonth.of(2025, m));
+                        }
+
+                        // shuffle to randomize order
+                        Collections.shuffle(months);
+
+                        // create one payment for each month
+                        for (YearMonth ym : months) {
+                            int day = 1 + random.nextInt(ym.lengthOfMonth());
+                            LocalDate transactionDate = ym.atDay(day);
+                            LocalDate forMonthOf = ym.atDay(1);
+
+                            TransactionType type = random.nextInt(11) <= 9 ? TransactionType.Rent :
+                                    TransactionType.Others;
+                            Integer ammount = type == TransactionType.Rent ? room.getRent() :
+                                    400 + random.nextInt(1000);
+
+                            Transaction transaction = Transaction.builder()
+                                    .transactionType(type)
+                                    .amount(ammount)
+                                    .forMonthOf(forMonthOf)
+                                    .transactionDate(transactionDate)
+                                    .notes("Auto-generated payment")
+                                    .room(room)
+                                    .tenant(tenant)
+                                    .build();
+
+                            transactionRepository.save(transaction);
+                        }
+                    }
                 }
             }
         }

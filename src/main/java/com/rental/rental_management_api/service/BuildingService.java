@@ -61,7 +61,7 @@ public class BuildingService {
     public BuildingDTO saveBuilding(BuildingDTO buildingDto) {
         Building building = buildingMapper.toEntity(buildingDto);
 
-        if (building.getBuildingId() != null){
+        if (building.getBuildingId() != null) {
             log.warn("Building ID was specified in Building DTO request for saving a new building. " +
                     "Specified Building ID will be disregarded");
             building.setBuildingId(null);
@@ -74,7 +74,8 @@ public class BuildingService {
         Building building = getBuildingOrThrow(buildingId);
         Building buildingUpdate = buildingMapper.toEntity(buildingDtoUpdate);
 
-        if (buildingUpdate.getBuildingId() != null && !building.getBuildingId().equals(buildingUpdate.getBuildingId())){
+        if (buildingUpdate.getBuildingId() != null &&
+                !building.getBuildingId().equals(buildingUpdate.getBuildingId())) {
             log.warn("Detected that a Building ID was specified in Building DTO request for updating building. " +
                     "It is also does not matched with the Building ID specified in the path variable. " +
                     "Disregarding the Building ID in the Building DTO request");

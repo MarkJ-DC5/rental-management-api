@@ -67,8 +67,7 @@ public class RoomService {
     public void deleteRoom(Integer roomId) {
         Room room = getRoomOrThrow(roomId);
 
-        // TODO: Handle case of inactive tenants
-        if (room.getTenants().size() > 0) {
+        if (tenantRepository.countByRoom_RoomId(roomId) > 1) {
             throw new ParentHasChildException("Room", "tenant");
         }
 

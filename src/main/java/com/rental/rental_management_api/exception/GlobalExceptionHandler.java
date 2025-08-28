@@ -1,6 +1,8 @@
-package com.rental.rental_management_api.controller;
+package com.rental.rental_management_api.exception;
 
+import com.rental.rental_management_api.exception.BusinessConstraintException;
 import com.rental.rental_management_api.exception.ParentHasChildException;
+import com.rental.rental_management_api.exception.PrimaryTenantConstraintException;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.payload.ErrorDetails;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -32,6 +35,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildErrorResponse(ex, message, description, status, false);
     }
+
     private ResponseEntity<ErrorDetails> buildErrorResponse(
             Exception ex,
             String message,
@@ -39,7 +43,7 @@ public class GlobalExceptionHandler {
             HttpStatus status,
             Boolean showCallSack
     ) {
-        if (showCallSack){
+        if (showCallSack) {
             log.error("{}: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
         } else {
             log.error("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
@@ -63,9 +67,26 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(PrimaryTenantConstraintException.class)
+    public ResponseEntity<ErrorDetails> handlePrimaryTenantConstraint(PrimaryTenantConstraintException ex,
+                                                                      WebRequest request) {
+        return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
+    }
+
+
     @ExceptionHandler(ParentHasChildException.class)
     public ResponseEntity<ErrorDetails> handleParentHasChild(ParentHasChildException ex, WebRequest request) {
         return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(BusinessConstraintException.class)
+    public ResponseEntity<ErrorDetails> handleBusinessConstraint(BusinessConstraintException ex, WebRequest request) {
+        return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorDetails> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, WebRequest request) {
+        return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
     }
 
     // 400 - Handle an incorrect input type or input not part of enum
@@ -117,13 +138,13 @@ public class GlobalExceptionHandler {
         Throwable cause = ex.getCause();
 
         if (cause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException ife
-        && ife.getTargetType().isEnum()) {
-             String message = String.format(
-                        "Invalid value '%s' for enum %s. Accepted values: %s",
-                        ife.getValue(),
-                        ife.getTargetType().getSimpleName(),
-                        Arrays.toString(ife.getTargetType().getEnumConstants())
-                );
+                && ife.getTargetType().isEnum()) {
+            String message = String.format(
+                    "Invalid value '%s' for enum %s. Accepted values: %s",
+                    ife.getValue(),
+                    ife.getTargetType().getSimpleName(),
+                    Arrays.toString(ife.getTargetType().getEnumConstants())
+            );
 
             return buildErrorResponse(ex, message, request.getDescription(false), HttpStatus.BAD_REQUEST);
         } else {
@@ -134,7 +155,8 @@ public class GlobalExceptionHandler {
 
     // 405 - Method not allowed
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorDetails> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, WebRequest request) {
+    public ResponseEntity<ErrorDetails> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
+                                                                 WebRequest request) {
         return buildErrorResponse(ex, "HTTP method not supported", request.getDescription(false),
                 HttpStatus.METHOD_NOT_ALLOWED);
     }
