@@ -7,12 +7,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 @Schema(description = "Data Transfer Object for a Room")
 public class RoomDTO {
     @Schema(description = "Unique identifier of the room", example = "1")

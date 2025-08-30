@@ -5,12 +5,10 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class MoveOutTenantRequest {
     @NotNull(message = "Date moved out cannot be blank")
     private LocalDate dateMovedOut;

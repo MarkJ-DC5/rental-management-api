@@ -8,12 +8,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class Tenant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

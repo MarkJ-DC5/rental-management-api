@@ -12,12 +12,10 @@ import java.util.List;
 
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

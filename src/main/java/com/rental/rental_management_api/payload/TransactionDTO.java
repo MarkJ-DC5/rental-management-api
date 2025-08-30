@@ -8,12 +8,10 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 @Schema(description = "Data Transfer Object for a Payment")
 public class TransactionDTO {
     @Schema(description = "Unique identifier of a payment", example = "1")

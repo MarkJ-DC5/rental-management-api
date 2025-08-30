@@ -5,12 +5,10 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class ErrorDetails {
     private String message;
     private Object details;

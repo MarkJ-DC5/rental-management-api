@@ -9,12 +9,10 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 @Schema(description = "Data Transfer Object for a Tenant")
 public class TenantDTO {
     @Schema(description = "Unique identifier of the room", example = "1")

@@ -3,12 +3,10 @@ package com.rental.rental_management_api.payload;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class AssignPrimaryTenantRequest {
     @NotNull(message = "Tenant ID of the new Primary Tenant cannot be blank")
     private Integer newPrimaryTenantID;

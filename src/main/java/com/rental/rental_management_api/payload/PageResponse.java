@@ -4,12 +4,10 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class PageResponse<T> {
     private List<T> content;
     private long totalElements;

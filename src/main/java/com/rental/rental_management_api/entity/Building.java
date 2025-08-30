@@ -8,12 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class Building {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
