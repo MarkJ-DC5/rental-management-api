@@ -17,6 +17,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/v1")
 @AllArgsConstructor
 @Tag(name = "3. Tenant", description = "Endpoints for tenant management")
 public class TenantController {

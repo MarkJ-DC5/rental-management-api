@@ -22,6 +22,7 @@ import java.net.URI;
 import java.time.LocalDate;
 
 @RestController
+@RequestMapping("/api/v1")
 @AllArgsConstructor
 @Tag(name = "4. Transaction", description = "Endpoints for transaction management")
 public class TransactionController {

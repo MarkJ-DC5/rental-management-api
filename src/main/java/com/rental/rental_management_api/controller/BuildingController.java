@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -24,7 +25,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/buildings")
+@RequestMapping("/api/v1/buildings")
 @Tag(name = "1. Building", description = "Endpoints for building management")
 @AllArgsConstructor
 public class BuildingController {
@@ -33,6 +34,7 @@ public class BuildingController {
 
     @GetMapping()
     @Operation(summary = "Retrieve all buildings.")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<List<BuildingDTO>> getAllBuildings() {
         return ResponseEntity.ok(service.getAllBuildings());
     }

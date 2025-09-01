@@ -13,6 +13,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
+@RequestMapping("/api/v1")
 @Tag(name = "2. Room", description = "Endpoints for room management")
 @AllArgsConstructor
 public class RoomController {
