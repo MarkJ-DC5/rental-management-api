@@ -8,7 +8,7 @@ import com.rental.rental_management_api.service.TenantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Tag(name = "3. Tenant", description = "Endpoints for tenant management")
 public class TenantController {
 
@@ -34,7 +34,7 @@ public class TenantController {
     }
 
     @GetMapping(path = "/tenants/{tenantId}")
-    @Operation(summary = "Retrieve a tenant by its ID.")
+    @Operation(summary = "Retrieve a tenant by its ID")
     public ResponseEntity<TenantDTO> getTenantById(
             @PathVariable Integer tenantId
     ) {
@@ -60,7 +60,7 @@ public class TenantController {
     }
 
     @PutMapping(path = "/tenants/{tenantId}")
-    @Operation(summary = "Update the personal info of an existing tenant.",
+    @Operation(summary = "Update the personal info of an existing tenant",
             description = "Updating assigned Room, Primary Status, and Move-in/Move-out Date is not allowed and will " +
                     "be ignored.")
     public ResponseEntity<TenantDTO> putTenant(
@@ -70,7 +70,7 @@ public class TenantController {
     }
 
     @PutMapping(path = "/rooms/{roomdId}/tenants/change-primary")
-    @Operation(summary = "Change the assigned primary tenant of a room.")
+    @Operation(summary = "Change the assigned primary tenant of a room")
     public ResponseEntity<TenantDTO> changePrimaryTenant(
             @PathVariable Integer roomdId,
             @RequestBody @Valid AssignPrimaryTenantRequest body) {
@@ -78,7 +78,7 @@ public class TenantController {
     }
 
     @PutMapping(path = "/rooms/{roomdId}/tenants/move-out")
-    @Operation(summary = "Set the move-out date of all tenants in a room.",
+    @Operation(summary = "Set the move-out date of all tenants in a room",
             description = "The action will set the status of the tenants to inactive and making the room vacant.")
     public ResponseEntity<List<TenantDTO>> moveOutTenants(
             @PathVariable Integer roomdId,
@@ -88,7 +88,7 @@ public class TenantController {
 
 
     @DeleteMapping(path = "/tenants/{tenantId}")
-    @Operation(summary = "Delete a tenant by its ID.")
+    @Operation(summary = "Delete a tenant by its ID")
     public ResponseEntity<Void> deleteTenant(
             @PathVariable Integer tenantId) {
         service.deleteTenant(tenantId);

@@ -2,10 +2,12 @@ package com.rental.rental_management_api.entity;
 
 import com.rental.rental_management_api.model.TenantGender;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Data

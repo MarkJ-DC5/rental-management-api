@@ -3,17 +3,17 @@ package com.rental.rental_management_api.service;
 import com.rental.rental_management_api.entity.Room;
 import com.rental.rental_management_api.entity.Tenant;
 import com.rental.rental_management_api.entity.Transaction;
+import com.rental.rental_management_api.exception.InvalidPrimaryTenantException;
 import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.mapper.PageMapper;
 import com.rental.rental_management_api.mapper.RoomMapper;
 import com.rental.rental_management_api.mapper.TenantMapper;
 import com.rental.rental_management_api.mapper.TransactionMapper;
 import com.rental.rental_management_api.payload.PageResponse;
-import com.rental.rental_management_api.payload.RoomDTO;
 import com.rental.rental_management_api.payload.TransactionDTO;
 import com.rental.rental_management_api.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +24,7 @@ import java.util.List;
 
 @Service
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class TransactionService {
     private final TransactionRepository transactionRepository;
@@ -45,7 +45,7 @@ public class TransactionService {
     }
 
     public PageResponse<TransactionDTO> getAllTransactions(LocalDate startDate, LocalDate endDate,
-                                                                 Pageable pageable) {
+                                                           Pageable pageable) {
         Page transactionsPage = transactionRepository.findByTransactionDateBetween(startDate, endDate, pageable);
         List<TransactionDTO> transactionDtos = transactionMapper.toDtoList(transactionsPage.getContent());
 
@@ -61,8 +61,8 @@ public class TransactionService {
         Tenant primaryTenant = room.getPrimaryTenant();
 
         if (!primaryTenant.getTenantId().equals(transactionDto.getTenantId())) {
-            throw new IllegalArgumentException("Provided Primary Tenant ID " + transactionDto.getTenantId()
-                    + " does match with the Primary Tenant ID in Room " + transactionDto.getRoomId());
+            throw new InvalidPrimaryTenantException(transactionDto.getTenantId(), "Does match with the Primary" +
+                    " Tenant ID in Room " + transactionDto.getRoomId());
         }
 
         Transaction transaction = transactionMapper.toEntity(transactionDto);
@@ -80,8 +80,8 @@ public class TransactionService {
         Tenant primaryTenant = room.getPrimaryTenant();
 
         if (!primaryTenant.getTenantId().equals(transactionDtoUpdate.getTenantId())) {
-            throw new IllegalArgumentException("Provided Primary Tenant ID " + transactionDtoUpdate.getTenantId()
-                    + " does match with the Primary Tenant ID in Room " + transactionDtoUpdate.getRoomId());
+            throw new InvalidPrimaryTenantException(transactionDtoUpdate.getTenantId(), "Does match with the Primary" +
+                    " Tenant ID in Room " + transactionDtoUpdate.getRoomId());
         }
 
         transaction.setRoom(room);
@@ -102,7 +102,7 @@ public class TransactionService {
     }
 
     public PageResponse<TransactionDTO> getTransactionsByRoomId(Integer roomId, LocalDate startDate, LocalDate endDate,
-                                                   Pageable pageable){
+                                                                Pageable pageable) {
         roomService.getRoomOrThrow(roomId);
 
         Page<Transaction> transactionPage = transactionRepository.findByRoom_RoomIdAndTransactionDateBetween(roomId,
@@ -114,15 +114,16 @@ public class TransactionService {
 
     public PageResponse<TransactionDTO> getTransactionsByTenantId(Integer tenantId, LocalDate startDate,
                                                                   LocalDate endDate,
-                                                                Pageable pageable){
+                                                                  Pageable pageable) {
         Tenant tenant = tenantService.getTenantOrThrow(tenantId);
 
-        if (!tenant.getIsPrimary()){
+        if (!tenant.getIsPrimary()) {
             log.warn("Tenant " + tenant.getTenantId() + " is not a primary tenant. It's likely no transactions will " +
                     "be returned. Unless the specified tenant was previously a primary Tenant.");
         }
 
-        Page<Transaction> transactionsPage = transactionRepository.findByTenant_TenantIdAndTransactionDateBetween(tenantId,
+        Page<Transaction> transactionsPage = transactionRepository.findByTenant_TenantIdAndTransactionDateBetween(
+                tenantId,
                 startDate, endDate, pageable);
         List<TransactionDTO> transactionDtos = transactionMapper.toDtoList(transactionsPage.getContent());
 

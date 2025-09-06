@@ -10,12 +10,11 @@ import com.rental.rental_management_api.service.BuildingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,29 +25,28 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/buildings")
+@RequiredArgsConstructor
 @Tag(name = "1. Building", description = "Endpoints for building management")
-@AllArgsConstructor
 public class BuildingController {
 
     private final BuildingService service;
 
-    @GetMapping()
-    @Operation(summary = "Retrieve all buildings.")
-    @PreAuthorize("hasRole('admin')")
+    @GetMapping
+    @Operation(summary = "Retrieve all buildings")
     public ResponseEntity<List<BuildingDTO>> getAllBuildings() {
         return ResponseEntity.ok(service.getAllBuildings());
     }
 
     @GetMapping(path = "/{buildingId}")
-    @Operation(summary = "Retrieve a building by its ID.")
+    @Operation(summary = "Retrieve a building by its ID")
     public ResponseEntity<BuildingDTO> getBuildingById(
             @PathVariable Integer buildingId
     ) {
         return ResponseEntity.ok(service.getBuildingById(buildingId));
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Create a new building.")
+    @PostMapping
+    @Operation(summary = "Create a new building")
     public ResponseEntity<BuildingDTO> postBuilding(
             @Valid @RequestBody BuildingDTO buildingDTO
     ) {
@@ -62,6 +60,7 @@ public class BuildingController {
     }
 
     @PutMapping(path = "/{buildingId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Update an existing building",
             description = "The building ID must be provided in the path variable. If included in the request body, it will be ignored."
@@ -74,6 +73,7 @@ public class BuildingController {
     }
 
     @DeleteMapping(path = "/{buildingId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a building by its ID, having no more linked rooms")
     public ResponseEntity<Void> deleteBuilding(
             @PathVariable Integer buildingId) {

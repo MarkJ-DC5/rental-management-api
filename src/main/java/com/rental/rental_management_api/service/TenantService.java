@@ -17,6 +17,7 @@ import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,7 @@ import java.util.List;
 
 @Service
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class TenantService {
     private final BuildingRepository buildingRepository;

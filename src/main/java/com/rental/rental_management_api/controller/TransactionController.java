@@ -1,20 +1,19 @@
 package com.rental.rental_management_api.controller;
 
 
-import com.rental.rental_management_api.model.RoomStatus;
 import com.rental.rental_management_api.payload.PageResponse;
-import com.rental.rental_management_api.payload.TenantDTO;
 import com.rental.rental_management_api.payload.TransactionDTO;
 import com.rental.rental_management_api.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -23,14 +22,14 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Tag(name = "4. Transaction", description = "Endpoints for transaction management")
 public class TransactionController {
 
     private final TransactionService service;
 
     @GetMapping(path = "/transactions")
-    @Operation(summary = "Retrieve all transactions between a specified Date Range.")
+    @Operation(summary = "Retrieve all transactions between a specified Date Range")
     public ResponseEntity<PageResponse<TransactionDTO>> getTransactions(
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate,
@@ -43,7 +42,7 @@ public class TransactionController {
     }
 
     @GetMapping(path = "/transaction/{transactionId}")
-    @Operation(summary = "Retrieve a transactions by its ID.")
+    @Operation(summary = "Retrieve a transactions by its ID")
     public ResponseEntity<TransactionDTO> getTransactionId(
             @PathVariable Integer transactionId
     ) {
@@ -51,7 +50,7 @@ public class TransactionController {
     }
 
     @PostMapping(path = "/transactions")
-    @Operation(summary = "Create a New Transaction.")
+    @Operation(summary = "Create a New Transaction")
     public ResponseEntity<TransactionDTO> postTransaction(
             @RequestBody @Valid TransactionDTO transactionDto
     ) {
@@ -65,7 +64,8 @@ public class TransactionController {
     }
 
     @PutMapping(path = "/transactions/{transactionId}")
-    @Operation(summary = "Update a transactions.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update a transactions")
     public ResponseEntity<TransactionDTO> putTransaction(
             @PathVariable Integer transactionId,
             @RequestBody @Valid TransactionDTO transactionDto) {
@@ -73,6 +73,7 @@ public class TransactionController {
     }
 
     @DeleteMapping(path = "/transactions/{transactionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a transaction by its ID")
     public ResponseEntity<Void> deleteRoom(
             @PathVariable Integer transactionId) {
@@ -81,7 +82,7 @@ public class TransactionController {
     }
 
     @GetMapping(path = "/rooms/{roomId}/transactions")
-    @Operation(summary = "Retrieve all transactions for the specified room between a specified Date Range.")
+    @Operation(summary = "Retrieve all transactions for the specified room between a specified Date Range")
     public ResponseEntity<PageResponse<TransactionDTO>> getTransactionsByRoomId(
             @PathVariable Integer roomId,
             @RequestParam LocalDate startDate,
@@ -92,7 +93,7 @@ public class TransactionController {
     }
 
     @GetMapping(path = "/tenants/{tenantId}/transactions")
-    @Operation(summary = "Retrieve all transactions for the specified tenant between a specified Date Range.")
+    @Operation(summary = "Retrieve all transactions for the specified tenant between a specified Date Range")
     public ResponseEntity<PageResponse<TransactionDTO>> getTransactionsByTenantId(
             @PathVariable Integer tenantId,
             @RequestParam LocalDate startDate,

@@ -2,11 +2,15 @@ package com.rental.rental_management_api.entity;
 
 import com.rental.rental_management_api.model.TransactionType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "payment_transactions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

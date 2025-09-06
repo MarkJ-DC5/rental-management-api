@@ -2,7 +2,7 @@
 --CREATE DATABASE rental_management;
 --USE rental_management;
 
-DROP TABLE IF EXISTS transaction;
+DROP TABLE IF EXISTS payment_transactions;
 DROP TABLE IF EXISTS tenant;
 DROP TABLE IF EXISTS room;
 DROP TABLE IF EXISTS building;
@@ -20,7 +20,7 @@ CREATE TABLE room (
 	room_id INT AUTO_INCREMENT PRIMARY KEY,
 	building_id INT NOT NULL,
 	room_name VARCHAR(100) NOT NULL,
-	room_type ENUM('Residential', 'Commercial', 'Others') NOT NULL,
+	room_type ENUM('RESIDENTIAL', 'COMMERCIAL', 'OTHERS') NOT NULL,
 	rent INT NOT NULL,
 	FOREIGN KEY (building_id) REFERENCES building(building_id)
 );
@@ -42,11 +42,11 @@ CREATE TABLE tenant (
 	FOREIGN KEY (room_id) REFERENCES room(room_id)
 );
 
-CREATE TABLE transaction (
+CREATE TABLE payment_transactions (
 	transaction_id INT AUTO_INCREMENT PRIMARY KEY,
 	room_id INT NOT NULL,
 	tenant_id INT NOT NULL,
-	transaction_type ENUM('Rent', 'Utilities', 'Downpayment', 'Others') NOT NULL,
+	transaction_type ENUM('RENT', 'UTILS', 'DOWNPAYMENT', 'OTHERS') NOT NULL,
 	amount INT NOT NULL,
 	for_month_of DATE NOT NULL,
 	transaction_date DATE NOT NULL,
@@ -55,4 +55,15 @@ CREATE TABLE transaction (
 	updated_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
  	FOREIGN KEY (room_id) REFERENCES room(room_id),
 	FOREIGN KEY (tenant_id) REFERENCES tenant(tenant_id)
+);
+
+CREATE TABLE IF NOT EXISTS user (
+	user_id INT AUTO_INCREMENT PRIMARY KEY,
+	username VARCHAR(50) NOT NULL UNIQUE,
+	password_hash VARCHAR(255) NOT NULL,
+	role ENUM ('ADMIN', 'PROP_MNGR') NOT NULL,
+	first_name VARCHAR(100) NOT NULL,
+	last_name VARCHAR(100) NOT NULL,
+    created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

@@ -1,14 +1,12 @@
 package com.rental.rental_management_api.exception;
 
-import com.rental.rental_management_api.exception.BusinessConstraintException;
-import com.rental.rental_management_api.exception.ParentHasChildException;
-import com.rental.rental_management_api.exception.PrimaryTenantConstraintException;
-import com.rental.rental_management_api.exception.ResourceNotFoundException;
 import com.rental.rental_management_api.payload.ErrorDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -62,8 +60,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorDetails> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
+    @ExceptionHandler(InvalidPrimaryTenantException.class)
+    public ResponseEntity<ErrorDetails> handleInvalidPrimaryTenant(InvalidPrimaryTenantException ex, WebRequest request) {
         return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
     }
 
@@ -72,7 +70,6 @@ public class GlobalExceptionHandler {
                                                                       WebRequest request) {
         return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
     }
-
 
     @ExceptionHandler(ParentHasChildException.class)
     public ResponseEntity<ErrorDetails> handleParentHasChild(ParentHasChildException ex, WebRequest request) {
@@ -84,9 +81,51 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ErrorDetails> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, WebRequest request) {
+    @ExceptionHandler(RegistrationException.class)
+    public ResponseEntity<ErrorDetails> handleRegistrationException(RegistrationException ex,
+                                                                  WebRequest request) {
         return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidCredentialsExeception.class)
+    public ResponseEntity<ErrorDetails> handleInvalidCredentials(InvalidCredentialsExeception ex,
+                                                                    WebRequest request) {
+        return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorDetails> handleAuthorizationDenied(AuthorizationDeniedException ex,
+                                                                 WebRequest request) {
+        return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.UNAUTHORIZED);
+    }
+
+    // 400 - Missing required parameters
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorDetails> handleMissingParameter(MissingServletRequestParameterException ex,
+                                                                             WebRequest request) {
+        return buildErrorResponse(ex, ex.getMessage(), request.getDescription(false), HttpStatus.BAD_REQUEST);
+    }
+
+    // 400 - Validation errors
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorDetails> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        FieldError::getDefaultMessage,
+                        (msg1, msg2) -> msg1
+                ));
+
+        ErrorDetails errorDetails = new ErrorDetails(
+                "Validation failed",
+                errors,
+                LocalDateTime.now()
+        );
+
+        log.error(ex.getClass().getSimpleName() + ": " + ex.getMessage());
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
     // 400 - Handle an incorrect input type or input not part of enum
@@ -130,6 +169,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, message, request.getDescription(false), HttpStatus.BAD_REQUEST);
     }
 
+
+    // 400 - Invalid value in JSON Body
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorDetails> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex,
@@ -139,26 +180,26 @@ public class GlobalExceptionHandler {
 
         if (cause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException ife
                 && ife.getTargetType().isEnum()) {
-            String message = String.format(
-                    "Invalid value '%s' for enum %s. Accepted values: %s",
-                    ife.getValue(),
-                    ife.getTargetType().getSimpleName(),
-                    Arrays.toString(ife.getTargetType().getEnumConstants())
-            );
+            String message;
+            if (ife.getTargetType().getSimpleName().equalsIgnoreCase("UserRole")){
+                message = String.format(
+                        "Invalid value '%s' for enum %s.",
+                        ife.getValue(),
+                        ife.getTargetType().getSimpleName()
+                );
+            } else {
+                message = String.format(
+                        "Invalid value '%s' for enum %s. Accepted values: %s",
+                        ife.getValue(),
+                        ife.getTargetType().getSimpleName(),
+                        Arrays.toString(ife.getTargetType().getEnumConstants())
+                );
+            }
 
             return buildErrorResponse(ex, message, request.getDescription(false), HttpStatus.BAD_REQUEST);
         } else {
             return handleAllExceptions(ex, request);
         }
-    }
-
-
-    // 405 - Method not allowed
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorDetails> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
-                                                                 WebRequest request) {
-        return buildErrorResponse(ex, "HTTP method not supported", request.getDescription(false),
-                HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     // 404 - Resource Not Found
@@ -168,27 +209,12 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND);
     }
 
-
-    // 400 - Validation errors
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorDetails> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .collect(Collectors.toMap(
-                        FieldError::getField,
-                        FieldError::getDefaultMessage,
-                        (msg1, msg2) -> msg1
-                ));
-
-        ErrorDetails errorDetails = new ErrorDetails(
-                "Validation failed",
-                errors,
-                LocalDateTime.now()
-        );
-
-        log.error(ex.getClass().getSimpleName() + ": " + ex.getMessage());
-        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    // 405 - Method not allowed
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorDetails> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
+                                                                 WebRequest request) {
+        return buildErrorResponse(ex, "HTTP method not supported", request.getDescription(false),
+                HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     // 500 - Fallback for all other exceptions

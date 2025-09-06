@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.rental.rental_management_api.exception.PrimaryTenantConstraintException;
 import com.rental.rental_management_api.model.RoomType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
@@ -60,7 +63,7 @@ public class Room {
 
         if (primaryTenantCount > 1) {
             throw new PrimaryTenantConstraintException(
-                    "Room " + roomId + " contains multiple primary tenants, which is invalid."
+                    "Room " + roomId + " contains multiple primary tenants and it's not allowed."
             );
         }
 

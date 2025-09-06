@@ -20,6 +20,7 @@ import com.rental.rental_management_api.repository.RoomRepository;
 import com.rental.rental_management_api.repository.TenantRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +31,7 @@ import java.util.List;
 
 @Service
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class BuildingService {
     private final BuildingRepository buildingRepository;
@@ -106,10 +107,10 @@ public class BuildingService {
         log.debug("Getting " + status + " Rooms...");
         Page<Room> roomsPage;
         switch (status) {
-            case vacant:
+            case VACANT:
                 roomsPage = roomRepository.findByBuildingIdAndStatus(buildingId, false, pageable);
                 break;
-            case occupied:
+            case OCCUPIED:
                 roomsPage = roomRepository.findByBuildingIdAndStatus(buildingId, true, pageable);
                 break;
             default:
@@ -130,10 +131,10 @@ public class BuildingService {
         log.debug("Getting " + status + " tenants...");
         Page<Tenant> tenantsPage;
         switch (status) {
-            case active:
+            case ACTIVE:
                 tenantsPage = tenantRepository.findByBuildingIdAndStatus(buildingId, true, primaryOnly, pageable);
                 break;
-            case inactive:
+            case INACTIVE:
                 tenantsPage = tenantRepository.findByBuildingIdAndStatus(buildingId, false, primaryOnly, pageable);
                 break;
             default:

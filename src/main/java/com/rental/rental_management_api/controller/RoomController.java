@@ -5,8 +5,9 @@ import com.rental.rental_management_api.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -14,8 +15,8 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 @Tag(name = "2. Room", description = "Endpoints for room management")
-@AllArgsConstructor
 public class RoomController {
 
     private final RoomService service;
@@ -59,28 +60,11 @@ public class RoomController {
     }
 
     @DeleteMapping(path = "/rooms/{roomId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a room by its ID, having no more linked tenants")
     public ResponseEntity<Void> deleteRoom(
             @PathVariable Integer roomId) {
         service.deleteRoom(roomId);
         return ResponseEntity.noContent().build();
     }
-
-
-//
-
-//
-//    @PutMapping(path = "/{roomId}/tenants")
-//    @Operation(summary = "Update tenant status: set primary or mark as moved out")
-//    public ResponseEntity<List<TenantDTO>> updateTenants(
-//            @PathVariable Integer roomId,
-//            @RequestBody List<@Valid TenantDTO> tenantDtos) {
-//        log.debug("Tenants DTO: " + tenantDtos);
-//        List<Tenant> tenants = tenantMapper.toEntityList(tenantDtos);
-//        log.debug("Tenants: " + tenants);
-//
-//        tenants = service.updateTenants(roomId, tenants);
-//
-//        return ResponseEntity.ok(tenantMapper.toDtoList(tenants));
-//    }
 }
