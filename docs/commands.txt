@@ -1,0 +1,20 @@
+1. Create Network
+docker network create rent_mgmt_net
+
+2. Create and Run MySQL container connected to created network
+docker run -d --name mysql --network rent_mgmt_net -e MYSQL_ROOT_PASSWORD=mysql -e MYSQL_DATABASE=rent_mgmt_db -p 3306:3306 mysql:latest
+* docker network connect rent_mgmt_net mysql
+* docker network disconnect rent_mgmt_net mysql
+* docker network prune
+
+3. Create Spring Boot App Image
+docker build -t rent_mgmt_app .
+
+4. Create Spring Boot App container
+docker run -d --name my_app --network rent_mgmt_net -p 8080:8080 -e DB_HOST=mysql -e DB_PORT=3306 -e DB_USER=root -e DB_PASS=mysql rent_mgmt_app
+docker run -d --name my_app --network rent_mgmt_net -p 8080:8080 --env-file .env rent_mgmt_app
+
+docker compose --env-file env up -d --build
+docker compose --env-file env down -v --rmi all --remove-orphans
+docker system prune -f
+
