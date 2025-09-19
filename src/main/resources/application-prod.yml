@@ -7,11 +7,11 @@ spring:
 
 logging:
   level:
-    org:
-      springframework: info
-
+    org.springframework: info
+    com.rental.rental_management_api: info
 
 springdoc:
+  api-docs:
+    enabled: false
   swagger-ui:
-    tryItOutEnabled: false
-    supportedSubmitMethods: []
+    enabled: false
