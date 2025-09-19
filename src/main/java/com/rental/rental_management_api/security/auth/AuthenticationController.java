@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "4. Authentication", description = "Endpoints for registration and authentication")
+@Tag(name = "5. Authentication")
 public class AuthenticationController {
 
     private final AuthenticationService service;

@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "3. Tenant", description = "Endpoints for tenant management")
+@Tag(name = "3. Tenant")
 public class TenantController {
 
     private final TenantService service;

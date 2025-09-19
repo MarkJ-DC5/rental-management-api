@@ -16,7 +16,7 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "2. Room", description = "Endpoints for room management")
+@Tag(name = "2. Room")
 public class RoomController {
 
     private final RoomService service;

@@ -23,7 +23,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "4. Transaction", description = "Endpoints for transaction management")
+@Tag(name = "4. Transaction")
 public class TransactionController {
 
     private final TransactionService service;
