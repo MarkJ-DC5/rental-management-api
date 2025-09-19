@@ -1,5 +1,0 @@
-DB_HOST=mysql
-DB_PORT=3306
-DB_NAME=rent_mgmt_db
-DB_USER=root
-DB_PASS=mysql
