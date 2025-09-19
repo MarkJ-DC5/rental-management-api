@@ -4,7 +4,7 @@ spring:
   application:
     name: Rental Management System REST API
   profiles:
-      active: dev
+      active: ${APP_PROFILE:prod}
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:rent_mgmt_db}
     username: ${DB_USER:root}
