@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
@@ -19,6 +21,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FilterDef(
+    name = "activeTenantFilter",
+    defaultCondition = "date_moved_out IS NULL"
+)
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,11 +43,10 @@ public class Room {
 
     @ManyToOne
     @JoinColumn(name = "building_id", referencedColumnName = "building_id", nullable = false)
-    @JsonBackReference
     private Building building;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = false)
-    @Where(clause = "date_moved_out IS NULL")
+    @Filter(name = "activeTenantFilter")
     private List<Tenant> tenants = new ArrayList<>();
 
     public Room(Integer roomId, String roomName, RoomType roomType, Integer rent, Building building) {
@@ -53,7 +58,7 @@ public class Room {
     }
 
     public Tenant getPrimaryTenant() {
-        if (tenants.isEmpty()) {
+        if (tenants == null || tenants.isEmpty()) {
             return null;
         }
 
