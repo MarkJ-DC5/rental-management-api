@@ -29,8 +29,6 @@ CREATE TABLE tenant (
 	tenant_id INT AUTO_INCREMENT PRIMARY KEY,
 	room_id INT NOT NULL,
 	is_primary BOOL NOT NULL,
-	login_id VARCHAR(100),
-	password VARCHAR(100),
 	first_name VARCHAR(100) NOT NULL,
 	last_name VARCHAR(100) NOT NULL,
 	middle_name VARCHAR(100),
