@@ -27,5 +27,15 @@ public interface TenantRepository extends JpaRepository<Tenant, Integer> {
                                            @Param("isPrimary") Boolean isPrimary,
                                            Pageable pageable);
 
+    @Query("""
+                SELECT t
+                FROM Tenant t
+                WHERE t.room.building.buildingId = :buildingId
+                AND t.isPrimary = :isPrimary
+            """)
+    Page<Tenant> findByBuildingId(@Param("buildingId") Integer buildingId,
+                                           @Param("isPrimary") Boolean isPrimary,
+                                           Pageable pageable);
+
     Integer countByRoom_RoomId(Integer roomId);
 }

@@ -6,7 +6,7 @@ spring:
     show-sql: true
   devtools:
     restart:
-      enabled: false
+      enabled: true
 
 logging:
   level:
