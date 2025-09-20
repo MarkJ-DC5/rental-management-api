@@ -19,7 +19,6 @@ import com.rental.rental_management_api.security.user.UserRole;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.parser.TE;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.domain.Page;
@@ -254,9 +253,11 @@ public class MyCLIRunner implements CommandLineRunner {
 
         for (int buildingId = 1; buildingId < buildingCount; buildingId++) {
             do {
-                page = tenantRepository.findByBuildingId(buildingId, true, PageRequest.of(tenantPageNum,
-                                                                                          tenantPageSize));
-                for (Tenant tenant : page.getContent()){
+                page = tenantRepository.findByBuildingId(buildingId,
+                                                         true,
+                                                         PageRequest.of(tenantPageNum,
+                                                                        tenantPageSize));
+                for (Tenant tenant : page.getContent()) {
                     Room room = tenant.getRoom();
 
                     int numPayments = 3 + random.nextInt(4);
@@ -294,7 +295,7 @@ public class MyCLIRunner implements CommandLineRunner {
 
                     }
 
-                    if(transactions.size() >= transactionsBatchSize){
+                    if (transactions.size() >= transactionsBatchSize) {
                         transactionRepository.saveAll(transactions);
                         transactions.clear();
                     }
@@ -304,7 +305,7 @@ public class MyCLIRunner implements CommandLineRunner {
             } while (page.hasNext());
         }
 
-        if(!transactions.isEmpty()){
+        if (!transactions.isEmpty()) {
             transactionRepository.saveAll(transactions);
             transactions.clear();
         }
